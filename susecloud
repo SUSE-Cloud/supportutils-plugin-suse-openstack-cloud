@@ -1,0 +1,363 @@
+#!/bin/bash
+#############################################################
+# Name:        Supportconfig Plugin for SUSE Cloud
+# Description: Gathers important troubleshooting information
+#              about SUSE Cloud
+# License:     GPLv2
+# Author:      Matt Barringer <mbarringer@suse.de>
+# Modified:    2012 August 29
+#############################################################
+
+SVER=1.0.0
+RCFILE="/usr/lib/supportconfig/resources/scplugin.rc"
+LOG_LINES=500	#0 means include the entire file
+
+[ -s $RCFILE ] && . $RCFILE || { echo "ERROR: Initializing resource file: $RCFILE"; exit 1; }
+
+validate_rpm_if_installed() {
+        echo
+        THISRPM=$1
+        echo "#==[ Validating RPM ]=================================#"
+        if rpm -q $THISRPM >/dev/null 2>&1; then
+                echo "# rpm -V $THISRPM"
+        
+                if rpm -V $THISRPM; then
+                        echo "Status: Passed"
+                else
+                        echo "Status: WARNING"
+                fi
+        else
+                echo "package $THISRPM is not installed"
+                echo "Status: Skipped"
+        fi
+        echo
+}
+
+section_header "Supportconfig Plugin for SUSE Cloud, v${SVER}"
+# This list was generated via:
+# find /mnt/sle11-cloud/ -name *.rpm | sed 's/.*\///; s/-[0-9.+A-Za-z_]\+-[0-9.]\+\.\(x86_64\|noarch\)\.rpm$//'
+RPMLIST="
+apache2-mod_fcgid
+apache2-mod_wsgi
+ceph
+ceph-fuse
+ceph-kmp-default
+ceph-kmp-xen
+ceph-radosgw
+cloud-init
+couchdb
+createrepo
+crowbar
+crowbar-barclamp-ceph
+crowbar-barclamp-crowbar
+crowbar-barclamp-database
+crowbar-barclamp-deployer
+crowbar-barclamp-dns
+crowbar-barclamp-glance
+crowbar-barclamp-ipmi
+crowbar-barclamp-keystone
+crowbar-barclamp-logging
+crowbar-barclamp-nagios
+crowbar-barclamp-network
+crowbar-barclamp-nova
+crowbar-barclamp-nova_dashboard
+crowbar-barclamp-ntp
+crowbar-barclamp-openstack
+crowbar-barclamp-provisioner
+crowbar-barclamp-swift
+erlang
+euca2ools
+FastCGI
+gecode
+gecode-devel
+google-perftools
+libcephfs1
+libedit0
+librados2
+librbd1
+librgw1
+libyaml-0-2
+memcached
+openstack-dashboard
+openstack-dashboard-config
+openstack-glance
+openstack-keystone
+openstack-keystone-doc
+openstack-nova
+openstack-nova-api
+openstack-nova-cert
+openstack-nova-compute
+openstack-nova-doc
+openstack-nova-network
+openstack-nova-objectstore
+openstack-nova-scheduler
+openstack-nova-vncproxy
+openstack-nova-volume
+openstack-novncproxy
+openstack-quantum
+openstack-quickstart
+openstack-swift
+openstack-swift-account
+openstack-swift-container
+openstack-swift-doc
+openstack-swift-object
+openstack-swift-proxy
+perl-JSON
+python-amqplib
+python-anyjson
+python-boto
+python-carrot
+python-ceph
+python-cheetah
+python-cliff
+python-cloudfiles
+python-cmd2
+python-configobj
+python-coverage
+python-Cython
+python-dateutil
+python-decorator
+python-distribute
+python-distutils-extra
+python-django
+python-django-nose
+python-docutils
+python-dtopt
+python-eventlet
+python-flup
+python-glance
+python-glanceclient
+python-greenlet
+python-horizon
+python-httplib2
+python-ipy
+python-iso8601
+python-Jinja2
+python-jsonschema
+python-keystone
+python-keystoneclient
+python-kombu
+python-lockfile
+python-m2crypto
+python-MiniMock
+python-mox
+python-netaddr
+python-netifaces
+python-nose
+python-nova
+python-novaclient
+python-paramiko
+python-passlib
+python-Paste
+python-PasteDeploy
+python-PasteScript
+python-prettytable
+python-psycopg2
+python-pycrypto
+python-Pygments
+python-pyrrd
+python-pysqlite
+python-python-daemon
+python-python-gflags
+python-python-memcached
+python-python-openid
+python-quantumclient
+python-repoze.lru
+python-Routes
+python-serial
+python-simplejson
+python-Sphinx
+python-SQLAlchemy
+python-sqlalchemy-migrate
+python-suds
+python-swift
+python-swiftclient
+python-tablib
+python-Tempita
+python-tornado
+python-twisted
+python-unittest2
+python-warlock
+python-WebOb
+python-WebTest
+python-WSGIProxy
+python-wsgiref
+python-xattr
+python-yaml
+python-zopeinterface
+rabbitmq-server
+release-notes-suse-cloud
+rubygem-actionmailer-2_3
+rubygem-actionpack-2_3
+rubygem-activerecord-2_3
+rubygem-activeresource-2_3
+rubygem-activesupport-2_3
+rubygem-addressable
+rubygem-amqp
+rubygem-bundler
+rubygem-bunny
+rubygem-chef
+rubygem-chef-expander
+rubygem-chef-server
+rubygem-chef-server-api
+rubygem-chef-server-webui
+rubygem-chef-solr
+rubygem-coderay
+rubygem-cstruct
+rubygem-daemons
+rubygem-dep_selector
+rubygem-em-http-request
+rubygem-erubis-2_7
+rubygem-eventmachine
+rubygem-extlib
+rubygem-fast_xs
+rubygem-haml
+rubygem-highline
+rubygem-i18n
+rubygem-json
+rubygem-kgio
+rubygem-kwalify
+rubygem-libxml-ruby
+rubygem-merb-assets
+rubygem-merb-core
+rubygem-merb-haml
+rubygem-merb-helpers
+rubygem-merb-param-protection
+rubygem-mime-types
+rubygem-mixlib-authentication
+rubygem-mixlib-cli
+rubygem-mixlib-config
+rubygem-mixlib-log
+rubygem-moneta
+rubygem-net-http-digest_auth
+rubygem-net-ssh
+rubygem-net-ssh-gateway
+rubygem-net-ssh-multi
+rubygem-ohai
+rubygem-pg
+rubygem-polyglot
+rubygem-rack
+rubygem-rails-2_3
+rubygem-rainbows
+rubygem-raindrops
+rubygem-rake
+rubygem-rest-client
+rubygem-ruby-openid
+rubygem-ruby-shadow
+rubygems
+rubygem-sass
+rubygem-simple-navigation
+rubygem-syslogger
+rubygem-systemu
+rubygem-thin
+rubygem-treetop
+rubygem-unicorn
+rubygem-uuidtools
+rubygem-wsman
+rubygem-xml-simple
+rubygem-yajl-ruby
+sleshammer
+supportutils-plugin-susecloud
+susecloud-admin_en-pdf
+susecloud-deployment_en-pdf
+susecloud-manuals_en
+suse-cloud-release
+suse-cloud-release-cd
+susecloud-user_en-pdf
+yast2-crowbar
+yum-metadata-parser
+"
+
+for THISRPM in $RPMLIST
+do
+   validate_rpm_if_installed $THISRPM
+done
+
+section_header "Crowbar"
+
+[ -d /etc/crowbar ] && FILES=$(find /etc/crowbar -type f) || FILES=""
+if [ -n "$FILES" ]; then
+  pconf_files $LOG_LINES $FILES
+fi
+
+pconf_files 0 "/etc/crowbar.install.key /tmp/bc-template-dns.json"
+
+[ -d /opt/dell/crowbar_framework/log ] && FILES=$(find /opt/dell/crowbar_framework/log/ -type f) || FILES=""
+if [ -n "$FILES" ]; then
+  plog_files $LOG_LINES $FILES
+fi
+
+[ -d /var/log/apache2 ] && FILES=$(find /var/log/apache2 -name provisioner*) || FILES=""
+if [ -n "$FILES" ]; then
+  plog_files $LOG_LINES $FILES
+fi
+
+[ -d /var/log/nodes ] && FILES=$(find /var/log/nodes -type f) || FILES=""
+if [ -n "$FILES" ]; then
+  plog_files $LOG_LINES $FILES
+fi
+
+[ -d /install-logs ] && FILES=$(find /install-logs -type f) || FILES=""
+if [ -n "$FILES" ]; then
+  plog_files $LOG_LINES $FILES
+fi
+
+
+section_header "Chef"
+[ -d /etc/chef ] && FILES=$(find /etc/chef -type f) || FILES=""
+if [ -n "$FILES" ]; then
+  pconf_files $LOG_LINES $FILES
+fi
+
+[ -d /var/log/chef ] && FILES=$(find /var/log/chef -type f) || FILES=""
+if [ -n "$FILES" ]; then
+  plog_files $LOG_LINES $FILES
+fi
+
+FILES="$(find /root -name screenlog.*)"
+if [ -n "$FILES" ]; then
+  plog_files $LOG_LINES $FILES
+fi
+
+section_header "Ceph config"
+[ -d /etc/ceph ] && FILES=$(find /etc/ceph -type f | egrep -v '(/monmap|\.keyring)$') || FILES=""
+if [ -n "$FILES" ]; then
+  pconf_files $LOG_LINES $FILES
+fi
+
+section_header "Ceph monmap"
+if [ -e /etc/ceph/monmap ]; then
+  monmaptool --print /etc/ceph/monmap
+else
+  echo "/etc/ceph/monmap did not exist"
+fi
+
+section_header "Ceph log files"
+[ -d /var/log/ceph ] && FILES=$(find /var/log/ceph -type f) || FILES=""
+if [ -n "$FILES" ]; then
+  plog_files $LOG_LINES $FILES
+fi
+
+section_header "OpenStack"
+FILES="$(find /var/log/ -name crowbar*)" || FILES=""
+if [ -n "$FILES" ]; then
+  plog_files $LOG_LINES $FILES
+fi
+
+[ -d /var/log/keystone ] && FILES=$(find /var/log/keystone -type f) || FILES=""
+if [ -n "$FILES" ]; then
+  plog_files $LOG_LINES $FILES
+fi
+
+[ -d /var/log/rabbitmq ] && FILES=$(find /var/log/rabbitmq -type f) || FILES=""
+if [ -n "$FILES" ]; then
+  plog_files $LOG_LINES $FILES
+fi
+
+[ -d /var/log/nova ] && FILES=$(find /var/log/nova -type f) || FILES=""
+if [ -n "$FILES" ]; then
+  plog_files $LOG_LINES $FILES
+fi
+
+
+
