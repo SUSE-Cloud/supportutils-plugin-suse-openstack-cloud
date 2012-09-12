@@ -10,12 +10,11 @@
 
 SVER=1.0.0
 RCFILE="/usr/lib/supportconfig/resources/scplugin.rc"
-LOG_LINES=500	#0 means include the entire file
+LOG_LINES=500  # 0 means include the entire file
 
 [ -s $RCFILE ] && . $RCFILE || { echo "ERROR: Initializing resource file: $RCFILE"; exit 1; }
 
 validate_rpm_if_installed() {
-        echo
         THISRPM=$1
         echo "#==[ Validating RPM ]=================================#"
         if rpm -q $THISRPM >/dev/null 2>&1; then
@@ -33,6 +32,7 @@ validate_rpm_if_installed() {
         echo
 }
 
+#############################################################
 section_header "Supportconfig Plugin for SUSE Cloud, v${SVER}"
 # This list was generated via:
 # find /mnt/sle11-cloud/ -name *.rpm | sed 's/.*\///; s/-[0-9.+A-Za-z_]\+-[0-9.]\+\.\(x86_64\|noarch\)\.rpm$//'
@@ -268,96 +268,73 @@ yast2-crowbar
 yum-metadata-parser
 "
 
-for THISRPM in $RPMLIST
-do
-   validate_rpm_if_installed $THISRPM
+for THISRPM in $RPMLIST; do
+        validate_rpm_if_installed $THISRPM
 done
 
+find_and_pconf_files () {
+        [ -d "$1" ] || return 0
+        FILES=$(find "$@" ! -name \*.gz ! -name \*.bz2)
+        if [ -n "$FILES" ]; then
+                pconf_files $FILES
+        fi
+}
+
+find_and_plog_files () {
+        [ -d "$1" ] || return 0
+        FILES=$(find "$@" ! -name \*.gz ! -name \*.bz2)
+        if [ -n "$FILES" ]; then
+                plog_files $LOG_LINES $FILES
+        fi
+}
+
+#############################################################
 section_header "Crowbar"
 
-[ -d /etc/crowbar ] && FILES=$(find /etc/crowbar -type f) || FILES=""
-if [ -n "$FILES" ]; then
-  pconf_files $LOG_LINES $FILES
-fi
+pconf_files /etc/crowbar.install.key /tmp/bc-template-dns.json
+find_and_pconf_files /etc/crowbar                         -type f
+find_and_plog_files  /opt/dell/crowbar_framework/log      -type f
+find_and_plog_files  /install-logs                        -type f
+find_and_plog_files  /var/log/nodes                       -type f
+find_and_plog_files  /var/log/barclamps                   -type f
+find_and_plog_files  /var/log -path /var/log/crowbar\*    -type f
+find_and_plog_files  /var/log/apache2                     -type f
 
-pconf_files 0 "/etc/crowbar.install.key /tmp/bc-template-dns.json"
-
-[ -d /opt/dell/crowbar_framework/log ] && FILES=$(find /opt/dell/crowbar_framework/log/ -type f) || FILES=""
-if [ -n "$FILES" ]; then
-  plog_files $LOG_LINES $FILES
-fi
-
-[ -d /var/log/apache2 ] && FILES=$(find /var/log/apache2 -name provisioner*) || FILES=""
-if [ -n "$FILES" ]; then
-  plog_files $LOG_LINES $FILES
-fi
-
-[ -d /var/log/nodes ] && FILES=$(find /var/log/nodes -type f) || FILES=""
-if [ -n "$FILES" ]; then
-  plog_files $LOG_LINES $FILES
-fi
-
-[ -d /install-logs ] && FILES=$(find /install-logs -type f) || FILES=""
-if [ -n "$FILES" ]; then
-  plog_files $LOG_LINES $FILES
-fi
-
-
+#############################################################
 section_header "Chef"
-[ -d /etc/chef ] && FILES=$(find /etc/chef -type f) || FILES=""
-if [ -n "$FILES" ]; then
-  pconf_files $LOG_LINES $FILES
-fi
 
-[ -d /var/log/chef ] && FILES=$(find /var/log/chef -type f) || FILES=""
-if [ -n "$FILES" ]; then
-  plog_files $LOG_LINES $FILES
-fi
+# Don't capture private keys/certificates, just show the inode info
+[ -d /etc/chef ] && find /etc/chef -type f -name \*.pem -ls
+find_and_pconf_files /etc/chef       -type f  ! -name \*.pem
 
-FILES="$(find /root -name screenlog.*)"
-if [ -n "$FILES" ]; then
-  plog_files $LOG_LINES $FILES
-fi
+find_and_plog_files  /var/log/chef   -type f
+find_and_plog_files  /root           -name screenlog.\*
 
+#############################################################
 section_header "Ceph config"
+
 [ -d /etc/ceph ] && FILES=$(find /etc/ceph -type f | egrep -v '(/monmap|\.keyring)$') || FILES=""
 if [ -n "$FILES" ]; then
-  pconf_files $LOG_LINES $FILES
+        pconf_files $FILES
 fi
 
+#############################################################
 section_header "Ceph monmap"
+
 if [ -e /etc/ceph/monmap ]; then
-  monmaptool --print /etc/ceph/monmap
+        monmaptool --print /etc/ceph/monmap
 else
-  echo "/etc/ceph/monmap did not exist"
+        echo "/etc/ceph/monmap did not exist"
 fi
 
+#############################################################
 section_header "Ceph log files"
-[ -d /var/log/ceph ] && FILES=$(find /var/log/ceph -type f) || FILES=""
-if [ -n "$FILES" ]; then
-  plog_files $LOG_LINES $FILES
-fi
 
+find_and_plog_files /var/log/ceph -type f
+
+#############################################################
 section_header "OpenStack"
-FILES="$(find /var/log/ -name crowbar*)" || FILES=""
-if [ -n "$FILES" ]; then
-  plog_files $LOG_LINES $FILES
-fi
 
-[ -d /var/log/keystone ] && FILES=$(find /var/log/keystone -type f) || FILES=""
-if [ -n "$FILES" ]; then
-  plog_files $LOG_LINES $FILES
-fi
-
-[ -d /var/log/rabbitmq ] && FILES=$(find /var/log/rabbitmq -type f) || FILES=""
-if [ -n "$FILES" ]; then
-  plog_files $LOG_LINES $FILES
-fi
-
-[ -d /var/log/nova ] && FILES=$(find /var/log/nova -type f) || FILES=""
-if [ -n "$FILES" ]; then
-  plog_files $LOG_LINES $FILES
-fi
-
-
-
+for svc in keystone rabbitmq glance swift nova; do
+        find_and_plog_files /var/log/$svc -type f
+done
