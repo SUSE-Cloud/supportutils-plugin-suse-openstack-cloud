@@ -303,12 +303,17 @@ find_and_plog_files  /var/log/nodes                       -type f
 find_and_plog_files  /var/log/barclamps                   -type f
 find_and_plog_files  /var/log -path /var/log/crowbar\*    -type f
 find_and_plog_files  /var/log/apache2                     -type f
+plugin_tag "admin node PXE / TFTP configuration"
+find                 /srv/tftpboot/discovery/pxelinux.cfg -ls
+echo; echo
+find_and_pconf_files /srv/tftpboot/discovery/pxelinux.cfg -type f
 
 #############################################################
 section_header "Chef"
 
 # Don't capture private keys/certificates, just show the inode info
 [ -d /etc/chef ] && find /etc/chef -type f -name \*.pem -ls
+echo; echo
 find_and_pconf_files /etc/chef       -type f  ! -name \*.pem
 
 find_and_plog_files  /var/log/chef   -type f
