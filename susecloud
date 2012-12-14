@@ -313,6 +313,7 @@ section_header "Chef"
 
 # Don't capture private keys/certificates, just show the inode info
 [ -d /etc/chef ] && find /etc/chef -type f -name \*.pem -ls
+echo; echo
 find_and_pconf_files /etc/chef       -type f  ! -name \*.pem
 
 find_and_plog_files  /var/log/chef   -type f
