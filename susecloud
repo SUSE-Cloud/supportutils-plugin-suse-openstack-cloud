@@ -112,6 +112,6 @@ find_and_plog_files /var/log/ceph -type f
 #############################################################
 section_header "OpenStack"
 
-for svc in keystone rabbitmq glance swift nova; do
+for svc in keystone rabbitmq glance swift nova cinder quantum heat ceilometer; do
         find_and_plog_files /var/log/$svc -type f
 done
