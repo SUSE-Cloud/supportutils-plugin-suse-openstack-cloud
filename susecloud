@@ -67,7 +67,6 @@ pconf_files \
 find_and_pconf_files /etc/crowbar                         -type f
 find_and_plog_files  /opt/dell/crowbar_framework/log      -type f
 find_and_plog_files  /var/log/nodes                       -type f
-find_and_plog_files  /var/log/barclamps                   -type f
 find_and_plog_files  /var/log -path /var/log/crowbar\*    -type f
 find_and_plog_files  /var/log/apache2                     -type f
 plugin_tag "admin node PXE / TFTP configuration"
