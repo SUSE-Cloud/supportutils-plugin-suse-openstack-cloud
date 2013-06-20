@@ -15,18 +15,18 @@ LOG_LINES=500  # 0 means include the entire file
 [ -s $RCFILE ] && . $RCFILE || { echo "ERROR: Initializing resource file: $RCFILE"; exit 1; }
 
 validate_rpm_if_installed() {
-        THISRPM=$1
+        thisrpm="$1"
         echo "#==[ Validating RPM ]=================================#"
-        if rpm -q $THISRPM >/dev/null 2>&1; then
-                echo "# rpm -V $THISRPM"
+        if rpm -q "$thisrpm" >/dev/null 2>&1; then
+                echo "# rpm -V $thisrpm"
         
-                if rpm -V $THISRPM; then
+                if rpm -V "$thisrpm"; then
                         echo "Status: Passed"
                 else
                         echo "Status: WARNING"
                 fi
         else
-                echo "package $THISRPM is not installed"
+                echo "package $thisrpm is not installed"
                 echo "Status: Skipped"
         fi
         echo
@@ -36,23 +36,23 @@ validate_rpm_if_installed() {
 section_header "Supportconfig Plugin for SUSE Cloud, v${SVER}"
 # The plugin already hardcodes a reference to this directory above, so we're
 # not introducing a new coupling with .spec files by using this absolute path here.
-for THISRPM in $(cat "/usr/lib/supportconfig/resources/susecloud-rpm-list"); do
-        validate_rpm_if_installed $THISRPM
+for thisrpm in $(cat "/usr/lib/supportconfig/resources/susecloud-rpm-list"); do
+        validate_rpm_if_installed "$thisrpm"
 done
 
 find_and_pconf_files () {
         [ -d "$1" ] || return 0
-        FILES=$(find "$@" ! -name \*.gz ! -name \*.bz2)
+        files=$(find "$@" ! -name \*.gz ! -name \*.bz2)
         if [ -n "$FILES" ]; then
-                pconf_files $FILES
+                pconf_files $files
         fi
 }
 
 find_and_plog_files () {
         [ -d "$1" ] || return 0
-        FILES=$(find "$@" ! -name \*.gz ! -name \*.bz2)
-        if [ -n "$FILES" ]; then
-                plog_files $LOG_LINES $FILES
+        files=$(find "$@" ! -name \*.gz ! -name \*.bz2)
+        if [ -n "$files" ]; then
+                plog_files "$LOG_LINES" $files
         fi
 }
 
