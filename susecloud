@@ -84,8 +84,22 @@ _capture() {
         fi
 }
 
+# test via: SUSECLOUD_PLUGIN_TEST=y ./susecloud
+_filter_test_cases() {
+        cat <<EOF
+    "password": "s3kr1t",
+    "bmc_password": "s3kr1t",
+    "machine-install": { "password": "s3kr1t" },
+web_ui_admin_default_password "s3kr1t"
+.... "bmc_user"=>"root", "bmc_password"=>"cr0wBar!"}, ...
+EOF
+}
+
 _capture_filter() {
         sed_args=(
+                -e 's/\("\([a-z_]\+\)\?passw\(or\)\?d":\? \+"\+\)[^"]\+"/\1<<CENSORED BY SUPPORTCONFIG PLUGIN>>"/i'
+                -e 's/^\( *\([a-z_]\+\)\?passw\(or\)\?d \+"\+\)[^"]\+"/\1<<CENSORED BY SUPPORTCONFIG PLUGIN>>"/i'
+                -e 's/\("\([a-z_]\+\)\?passw\(or\)\?d" *=> *"\+\)[^"]\+"/\1<<CENSORED BY SUPPORTCONFIG PLUGIN>>"/i'
         )
         if (( ADD_OPTION_LOGS )); then
                 sed_args+=( -e 's/^M//g' )
@@ -100,6 +114,11 @@ _capture_filter() {
         fi
         sed "${sed_args[@]}"
 }
+
+if [ -n "$SUSECLOUD_PLUGIN_TEST" ]; then
+        _filter_test_cases | _capture_filter
+        exit 0
+fi
 
 #############################################################
 section_header "Supportconfig Plugin for SUSE Cloud, v${SVER}"
