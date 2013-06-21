@@ -32,6 +32,95 @@ validate_rpm_if_installed() {
         echo
 }
 
+pconf_files() {
+        _log_files 0 "Configuration File" "$@"
+}
+
+plog_files() {
+        loglines="$1"
+        shift
+        _log_files "$loglines" "Log File" "$@"
+}
+
+_log_files() {
+        loglines="$1" title="$2"
+        shift 2
+
+        for file in "$@"; do
+                _log_file "$loglines" "$title" "$file"
+        done
+}
+
+_log_file() {
+        loglines="$1" title="$2" file="$3"
+
+        case "$file" in
+                *.tbz|*.bz2|*.gz|*.zip)
+                        continue
+                        ;;
+        esac
+
+        if ! [ -f "$file" ]; then
+                plugin_tag "$title" "$file - File not found"
+                continue
+        fi
+
+        if [ "$loglines" -eq 0 ]; then
+                plugin_tag "$title" "$file"
+        else
+                plugin_tag "$title" "$file - Last $loglines Lines"
+        fi
+
+        _capture "$loglines" "$file" | _capture_filter
+        echo
+}
+
+_capture() {
+        loglines="$1" file="$2"
+        if [ "$loglines" -eq 0 ]; then
+                cat "$file"
+        else
+                tail -"$loglines" "$file"
+        fi
+}
+
+# test via: SUSECLOUD_PLUGIN_TEST=y ./susecloud
+_filter_test_cases() {
+        cat <<EOF
+    "password": "s3kr1t",
+    "token": "999888777666",
+    "bmc_password": "s3kr1t",
+    "machine-install": { "password": "s3kr1t" },
+web_ui_admin_default_password "s3kr1t"
+.... "bmc_user"=>"root", "bmc_password"=>"cr0wBar!"}, {"token"=>"l33t", ...
+EOF
+}
+
+_capture_filter() {
+        sed_args=(
+                -e 's/\("\([a-z_]\+\)\?\(passw\(or\)\?d\|token\)":\? \+"\+\)[^"]\+"/\1<<CENSORED BY SUPPORTCONFIG PLUGIN>>"/gi'
+                -e 's/^\( *\([a-z_]\+\)\?passw\(or\)\?d \+"\+\)[^"]\+"/\1<<CENSORED BY SUPPORTCONFIG PLUGIN>>"/i'
+                -e 's/\("\([a-z_]\+\)\?\(passw\(or\)\?d\|token\)" *=> *"\+\)[^"]\+"/\1<<CENSORED BY SUPPORTCONFIG PLUGIN>>"/gi'
+        )
+        if (( ADD_OPTION_LOGS )); then
+                sed_args+=( -e 's/^M//g' )
+        else
+                sed_args+=(
+                        -e '/^[[:space:]]*#/d'
+                        -e '/^[[:space:]]*;/d'
+                        -e '/^[[:space:]]*\/\//d'
+                        -e 's/^M//g'
+                        -e '/^$/d'
+                )
+        fi
+        sed "${sed_args[@]}"
+}
+
+if [ -n "$SUSECLOUD_PLUGIN_TEST" ]; then
+        _filter_test_cases | _capture_filter
+        exit 0
+fi
+
 #############################################################
 section_header "Supportconfig Plugin for SUSE Cloud, v${SVER}"
 # This list was generated via:
