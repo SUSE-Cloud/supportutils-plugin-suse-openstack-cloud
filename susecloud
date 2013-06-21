@@ -88,18 +88,19 @@ _capture() {
 _filter_test_cases() {
         cat <<EOF
     "password": "s3kr1t",
+    "token": "999888777666",
     "bmc_password": "s3kr1t",
     "machine-install": { "password": "s3kr1t" },
 web_ui_admin_default_password "s3kr1t"
-.... "bmc_user"=>"root", "bmc_password"=>"cr0wBar!"}, {"another_password"=>"l33t", ...
+.... "bmc_user"=>"root", "bmc_password"=>"cr0wBar!"}, {"token"=>"l33t", ...
 EOF
 }
 
 _capture_filter() {
         sed_args=(
-                -e 's/\("\([a-z_]\+\)\?passw\(or\)\?d":\? \+"\+\)[^"]\+"/\1<<CENSORED BY SUPPORTCONFIG PLUGIN>>"/gi'
+                -e 's/\("\([a-z_]\+\)\?\(passw\(or\)\?d\|token\)":\? \+"\+\)[^"]\+"/\1<<CENSORED BY SUPPORTCONFIG PLUGIN>>"/gi'
                 -e 's/^\( *\([a-z_]\+\)\?passw\(or\)\?d \+"\+\)[^"]\+"/\1<<CENSORED BY SUPPORTCONFIG PLUGIN>>"/i'
-                -e 's/\("\([a-z_]\+\)\?passw\(or\)\?d" *=> *"\+\)[^"]\+"/\1<<CENSORED BY SUPPORTCONFIG PLUGIN>>"/gi'
+                -e 's/\("\([a-z_]\+\)\?\(passw\(or\)\?d\|token\)" *=> *"\+\)[^"]\+"/\1<<CENSORED BY SUPPORTCONFIG PLUGIN>>"/gi'
         )
         if (( ADD_OPTION_LOGS )); then
                 sed_args+=( -e 's/^M//g' )
