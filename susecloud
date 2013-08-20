@@ -132,7 +132,7 @@ done
 find_and_pconf_files () {
         [ -d "$1" ] || return 0
         files=$(find "$@" ! -name \*.gz ! -name \*.bz2)
-        if [ -n "$FILES" ]; then
+        if [ -n "$files" ]; then
                 pconf_files $files
         fi
 }
@@ -162,6 +162,7 @@ plugin_tag "admin node PXE / TFTP configuration"
 find                 /srv/tftpboot/discovery/pxelinux.cfg -ls
 echo; echo
 find_and_pconf_files /srv/tftpboot/discovery/pxelinux.cfg -type f
+find_and_pconf_files /srv/tftpboot/nodes                  -type f
 
 #############################################################
 section_header "Chef"
@@ -177,9 +178,12 @@ find_and_plog_files  /root           -name screenlog.\*
 #############################################################
 section_header "Ceph config"
 
-[ -d /etc/ceph ] && FILES=$(find /etc/ceph -type f | egrep -v '(/monmap|\.keyring)$') || FILES=""
-if [ -n "$FILES" ]; then
-        pconf_files $FILES
+if [ -d /etc/ceph ]; then
+    if files=$(find /etc/ceph -type f | egrep -v '(/monmap|\.keyring)$'); then
+        if [ -n "$files" ]; then
+            pconf_files $files
+        fi
+    fi
 fi
 
 #############################################################
