@@ -201,7 +201,21 @@ section_header "Ceph log files"
 find_and_plog_files /var/log/ceph -type f
 
 #############################################################
-section_header "OpenStack"
+section_header "OpenStack config files"
+
+for svc in keystone rabbitmq glance swift nova cinder quantum heat ceilometer; do
+        find_and_pconf_files /etc/$svc -type f -regex '.*\.\(co?nf\(ig\)?\|ini\|json\|filters\)'
+
+        # Keep this grouped with other rabbitmq config files
+        case $svc in
+            rabbitmq)
+                pconf_files /etc/rabbitmq/enabled_plugins
+                ;;
+        esac
+done
+
+#############################################################
+section_header "OpenStack log files"
 
 for svc in keystone rabbitmq glance swift nova cinder quantum heat ceilometer; do
         find_and_plog_files /var/log/$svc -type f
