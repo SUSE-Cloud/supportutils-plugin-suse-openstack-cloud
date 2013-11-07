@@ -34,7 +34,7 @@ validate_rpm_if_installed() {
 
 #############################################################
 section_header "Supportconfig Plugin for SUSE Cloud, v${SVER}"
-for THISRPM in $(cat "rpm-list"); do
+for THISRPM in $(cat "susecloud-rpm-list"); do
         validate_rpm_if_installed $THISRPM
 done
 
