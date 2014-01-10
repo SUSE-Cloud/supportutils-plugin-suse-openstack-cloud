@@ -10,47 +10,138 @@
 
 SVER=1.0.0
 RCFILE="/usr/lib/supportconfig/resources/scplugin.rc"
-LOG_LINES=500  # 0 means include the entire file
+LOG_LINES=5000  # 0 means include the entire file
 
 [ -s $RCFILE ] && . $RCFILE || { echo "ERROR: Initializing resource file: $RCFILE"; exit 1; }
 
 validate_rpm_if_installed() {
-        THISRPM=$1
+        thisrpm="$1"
         echo "#==[ Validating RPM ]=================================#"
-        if rpm -q $THISRPM >/dev/null 2>&1; then
-                echo "# rpm -V $THISRPM"
+        if rpm -q "$thisrpm" >/dev/null 2>&1; then
+                echo "# rpm -V $thisrpm"
         
-                if rpm -V $THISRPM; then
+                if rpm -V "$thisrpm"; then
                         echo "Status: Passed"
                 else
                         echo "Status: WARNING"
                 fi
         else
-                echo "package $THISRPM is not installed"
+                echo "package $thisrpm is not installed"
                 echo "Status: Skipped"
         fi
         echo
 }
 
+pconf_files() {
+        _log_files 0 "Configuration File" "$@"
+}
+
+plog_files() {
+        loglines="$1"
+        shift
+        _log_files "$loglines" "Log File" "$@"
+}
+
+_log_files() {
+        loglines="$1" title="$2"
+        shift 2
+
+        for file in "$@"; do
+                _log_file "$loglines" "$title" "$file"
+        done
+}
+
+_log_file() {
+        loglines="$1" title="$2" file="$3"
+
+        case "$file" in
+                *.tbz|*.bz2|*.gz|*.zip)
+                        continue
+                        ;;
+        esac
+
+        if ! [ -f "$file" ]; then
+                plugin_tag "$title" "$file - File not found"
+                continue
+        fi
+
+        if [ "$loglines" -eq 0 ]; then
+                plugin_tag "$title" "$file"
+        else
+                plugin_tag "$title" "$file - Last $loglines Lines"
+        fi
+
+        _capture "$loglines" "$file" | _capture_filter
+        echo
+}
+
+_capture() {
+        loglines="$1" file="$2"
+        if [ "$loglines" -eq 0 ]; then
+                cat "$file"
+        else
+                tail -"$loglines" "$file"
+        fi
+}
+
+# test via: SUSECLOUD_PLUGIN_TEST=y ./susecloud
+_filter_test_cases() {
+        cat <<EOF
+    "password": "s3kr1t",
+    "token": "999888777666",
+    "bmc_password": "s3kr1t",
+    "machine-install": { "password": "s3kr1t" },
+web_ui_admin_default_password "s3kr1t"
+.... "bmc_user"=>"root", "bmc_password"=>"cr0wBar!"}, {"token"=>"l33t", ...
+EOF
+}
+
+_capture_filter() {
+        sed_args=(
+                -e 's/\("\([a-z_]\+\)\?\(passw\(or\)\?d\|token\)":\? \+"\+\)[^"]\+"/\1<<CENSORED BY SUPPORTCONFIG PLUGIN>>"/gi'
+                -e 's/^\( *\([a-z_]\+\)\?passw\(or\)\?d \+"\+\)[^"]\+"/\1<<CENSORED BY SUPPORTCONFIG PLUGIN>>"/i'
+                -e 's/\("\([a-z_]\+\)\?\(passw\(or\)\?d\|token\)" *=> *"\+\)[^"]\+"/\1<<CENSORED BY SUPPORTCONFIG PLUGIN>>"/gi'
+        )
+        if (( ADD_OPTION_LOGS )); then
+                sed_args+=( -e 's/^M//g' )
+        else
+                sed_args+=(
+                        -e '/^[[:space:]]*#/d'
+                        -e '/^[[:space:]]*;/d'
+                        -e '/^[[:space:]]*\/\//d'
+                        -e 's/^M//g'
+                        -e '/^$/d'
+                )
+        fi
+        sed "${sed_args[@]}"
+}
+
+if [ -n "$SUSECLOUD_PLUGIN_TEST" ]; then
+        _filter_test_cases | _capture_filter
+        exit 0
+fi
+
 #############################################################
 section_header "Supportconfig Plugin for SUSE Cloud, v${SVER}"
-for THISRPM in $(cat "susecloud-rpm-list"); do
-        validate_rpm_if_installed $THISRPM
+# The plugin already hardcodes a reference to this directory above, so we're
+# not introducing a new coupling with .spec files by using this absolute path here.
+for thisrpm in $(cat "/usr/lib/supportconfig/resources/susecloud-rpm-list"); do
+        validate_rpm_if_installed "$thisrpm"
 done
 
 find_and_pconf_files () {
         [ -d "$1" ] || return 0
-        FILES=$(find "$@" ! -name \*.gz ! -name \*.bz2)
-        if [ -n "$FILES" ]; then
-                pconf_files $FILES
+        files=$(find "$@" ! -name \*.gz ! -name \*.bz2)
+        if [ -n "$files" ]; then
+                pconf_files $files
         fi
 }
 
 find_and_plog_files () {
         [ -d "$1" ] || return 0
-        FILES=$(find "$@" ! -name \*.gz ! -name \*.bz2)
-        if [ -n "$FILES" ]; then
-                plog_files $LOG_LINES $FILES
+        files=$(find "$@" ! -name \*.gz ! -name \*.bz2)
+        if [ -n "$files" ]; then
+                plog_files "$LOG_LINES" $files
         fi
 }
 
@@ -59,20 +150,19 @@ section_header "Crowbar"
 
 pconf_files \
 	/etc/crowbar.install.key \
-	/tmp/bc-template-dns.json \
 	/opt/dell/chef/data_bags/crowbar/bc-template-*.json \
 	/var/chef/cache/chef-stacktrace.out
 find_and_pconf_files /etc/crowbar                         -type f
 find_and_plog_files  /opt/dell/crowbar_framework/log      -type f
-find_and_plog_files  /install-logs                        -type f
+find_and_pconf_files /var/lib/crowbar/config              -type f
 find_and_plog_files  /var/log/nodes                       -type f
-find_and_plog_files  /var/log/barclamps                   -type f
 find_and_plog_files  /var/log -path /var/log/crowbar\*    -type f
 find_and_plog_files  /var/log/apache2                     -type f
 plugin_tag "admin node PXE / TFTP configuration"
 find                 /srv/tftpboot/discovery/pxelinux.cfg -ls
 echo; echo
 find_and_pconf_files /srv/tftpboot/discovery/pxelinux.cfg -type f
+find_and_pconf_files /srv/tftpboot/nodes                  -type f
 
 #############################################################
 section_header "Chef"
@@ -88,9 +178,12 @@ find_and_plog_files  /root           -name screenlog.\*
 #############################################################
 section_header "Ceph config"
 
-[ -d /etc/ceph ] && FILES=$(find /etc/ceph -type f | egrep -v '(/monmap|\.keyring)$') || FILES=""
-if [ -n "$FILES" ]; then
-        pconf_files $FILES
+if [ -d /etc/ceph ]; then
+    if files=$(find /etc/ceph -type f | egrep -v '(/monmap|\.keyring)$'); then
+        if [ -n "$files" ]; then
+            pconf_files $files
+        fi
+    fi
 fi
 
 #############################################################
@@ -108,8 +201,22 @@ section_header "Ceph log files"
 find_and_plog_files /var/log/ceph -type f
 
 #############################################################
-section_header "OpenStack"
+section_header "OpenStack config files"
 
-for svc in keystone rabbitmq glance swift nova; do
+for svc in keystone rabbitmq glance swift nova cinder quantum heat ceilometer; do
+        find_and_pconf_files /etc/$svc -type f -regex '.*\.\(co?nf\(ig\)?\|ini\|json\|filters\)'
+
+        # Keep this grouped with other rabbitmq config files
+        case $svc in
+            rabbitmq)
+                pconf_files /etc/rabbitmq/enabled_plugins
+                ;;
+        esac
+done
+
+#############################################################
+section_header "OpenStack log files"
+
+for svc in keystone rabbitmq glance swift nova cinder quantum heat ceilometer; do
         find_and_plog_files /var/log/$svc -type f
 done
