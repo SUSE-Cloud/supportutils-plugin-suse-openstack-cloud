@@ -231,3 +231,10 @@ if [ -d /etc/corosync ]; then
     fi
   fi
 fi
+
+#############################################################
+section_header "Cluster log files"
+
+if [ -d /var/log/cluster/ ]; then
+  find_and_plog_files  /var/log/cluster   -type f
+fi
