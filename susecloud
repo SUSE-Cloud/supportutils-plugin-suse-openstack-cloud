@@ -220,3 +220,21 @@ section_header "OpenStack log files"
 for svc in keystone rabbitmq glance swift nova cinder neutron heat ceilometer; do
         find_and_plog_files /var/log/$svc -type f
 done
+
+#############################################################
+section_header "Corosync config"
+
+if [ -d /etc/corosync ]; then
+  if files=$(find /etc/corosync/ -type f | egrep -v 'authkey$'); then
+    if [ -n "$files" ]; then
+      pconf_files $files
+    fi
+  fi
+fi
+
+#############################################################
+section_header "Cluster log files"
+
+if [ -d /var/log/cluster/ ]; then
+  find_and_plog_files  /var/log/cluster   -type f
+fi
