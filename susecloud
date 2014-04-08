@@ -19,7 +19,7 @@ validate_rpm_if_installed() {
         echo "#==[ Validating RPM ]=================================#"
         if rpm -q "$thisrpm" >/dev/null 2>&1; then
                 echo "# rpm -V $thisrpm"
-        
+
                 if rpm -V "$thisrpm"; then
                         echo "Status: Passed"
                 else
@@ -149,9 +149,8 @@ find_and_plog_files () {
 section_header "Crowbar"
 
 pconf_files \
-	/etc/crowbar.install.key \
-	/opt/dell/chef/data_bags/crowbar/bc-template-*.json \
-	/var/chef/cache/chef-stacktrace.out
+        /etc/crowbar.install.key \
+        /opt/dell/chef/data_bags/crowbar/bc-template-*.json
 find_and_pconf_files /etc/crowbar                         -type f
 find_and_plog_files  /opt/dell/crowbar_framework/log      -type f
 find_and_pconf_files /var/lib/crowbar/config              -type f
@@ -173,6 +172,10 @@ echo; echo
 find_and_pconf_files /etc/chef       -type f  ! -name \*.pem
 
 find_and_plog_files  /var/log/chef   -type f
+plog_files 0 \
+        /var/chef/cache/chef-stacktrace.out \
+        /var/chef/cache/failed-run-data.json
+
 find_and_plog_files  /root           -name screenlog.\*
 
 #############################################################
@@ -220,6 +223,16 @@ section_header "OpenStack log files"
 for svc in keystone rabbitmq glance swift nova cinder neutron heat ceilometer; do
         find_and_plog_files /var/log/$svc -type f
 done
+
+#############################################################
+section_header "Open vSwitch config files"
+
+find_and_pconf_files /etc/openvswitch -type f
+
+#############################################################
+section_header "Open vSwitch log files"
+
+find_and_plog_files /var/log/openvswitch -type f
 
 #############################################################
 section_header "Corosync config"
