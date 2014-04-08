@@ -225,6 +225,16 @@ for svc in keystone rabbitmq glance swift nova cinder neutron heat ceilometer; d
 done
 
 #############################################################
+section_header "Open vSwitch config files"
+
+find_and_pconf_files /etc/openvswitch -type f
+
+#############################################################
+section_header "Open vSwitch log files"
+
+find_and_plog_files /var/log/openvswitch -type f
+
+#############################################################
 section_header "Corosync config"
 
 if [ -d /etc/corosync ]; then
