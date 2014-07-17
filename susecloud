@@ -235,6 +235,11 @@ section_header "Open vSwitch log files"
 find_and_plog_files /var/log/openvswitch -type f
 
 #############################################################
+section_header "MongoDB log files"
+
+find_and_plog_files /var/log/mongodb -type f
+
+#############################################################
 section_header "Corosync config"
 
 if [ -d /etc/corosync ]; then
