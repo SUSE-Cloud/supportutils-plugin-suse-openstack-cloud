@@ -98,6 +98,16 @@ EOF
 
 CENSORED='<<CENSORED BY SUPPORTCONFIG PLUGIN>>'
 
+_expected_test_results=$( cat <<EOF
+    "password": "$CENSORED",
+    "token": "$CENSORED",
+    "bmc_password": "$CENSORED",
+    "machine-install": { "password": "$CENSORED" },
+web_ui_admin_default_password "$CENSORED"
+.... "bmc_user"=>"root", "bmc_password"=>"$CENSORED"}, {"token"=>"$CENSORED", ...
+EOF
+)
+
 _capture_filter() {
         sed_args=(
                 # "password": "s3kr1t",
@@ -127,8 +137,19 @@ _capture_filter() {
 }
 
 if [ -n "$SUSECLOUD_PLUGIN_TEST" ]; then
-        _filter_test_cases | _capture_filter
-        exit 0
+        tmpdir=$( mktemp -d )
+        _filter_test_cases | _capture_filter > $tmpdir/got
+        echo "$_expected_test_results" > $tmpdir/expected
+        if cmp $tmpdir/{got,expected}; then
+                rm $tmpdir/{got,expected}
+                rmdir $tmpdir
+                exit 0
+        else
+                echo "Got unexpected test results:"
+                diff -u $tmpdir/{got,expected}
+                echo "Look in $tmpdir"
+                exit 1
+        fi
 fi
 
 #############################################################
