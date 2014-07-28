@@ -93,6 +93,9 @@ _filter_test_cases() {
     "machine-install": { "password": "s3kr1t" },
 web_ui_admin_default_password "s3kr1t"
 .... "bmc_user"=>"root", "bmc_password"=>"cr0wBar!"}, {"token"=>"l33t", ...
+neutron_admin_password=s3kr1t
+rabbit_password=s3kr1t
+connection=postgresql://nova:s3kr1t@192.168.124.81/nova
 EOF
 }
 
@@ -105,6 +108,9 @@ _expected_test_results=$( cat <<EOF
     "machine-install": { "password": "$CENSORED" },
 web_ui_admin_default_password "$CENSORED"
 .... "bmc_user"=>"root", "bmc_password"=>"$CENSORED"}, {"token"=>"$CENSORED", ...
+neutron_admin_password=$CENSORED
+rabbit_password=$CENSORED
+connection=postgresql://nova:$CENSORED@192.168.124.81/nova
 EOF
 )
 
@@ -121,6 +127,13 @@ _capture_filter() {
 
                 # .... "bmc_user"=>"root", "bmc_password"=>"cr0wBar!"}, {"token"=>"l33t", ...
                 -e 's/\("\([a-z_]\+\)\?\(passw\(or\)\?d\|token\)" *=> *"\+\)[^"]\+"/\1'"$CENSORED"'"/gi'
+
+                # neutron_admin_password=s3kr1t
+                # rabbit_password=s3kr1t
+                -e 's/^\( *[a-z_]\+_password[a-z_]*=\).\+/\1'"$CENSORED"'/'
+
+                # connection=postgresql://nova:s3kr1t@192.168.124.81/nova
+                -e 's!^\( *\([a-z_]\+_\)\?connection[a-z_]*=[a-z]\+://[a-z_]\+:\)[^@]\+@!\1'"$CENSORED"'@!'
         )
         if (( ADD_OPTION_LOGS )); then
                 sed_args+=( -e 's/^M//g' )
