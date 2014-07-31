@@ -139,6 +139,11 @@ openvswitch-kmp-default
 openvswitch-kmp-trace
 openvswitch-kmp-xen
 openvswitch-switch
+patterns-cloud-admin
+patterns-cloud-compute
+patterns-cloud-controller
+patterns-cloud-network
+patterns-cloud-user
 perl-Error
 perl-JSON
 python-alembic
