@@ -300,3 +300,14 @@ section_header "Cluster log files"
 if [ -d /var/log/cluster/ ]; then
   find_and_plog_files  /var/log/cluster   -type f
 fi
+
+#############################################################
+section_header "Backup and Restore log files"
+
+plog_files 0 /var/log/crowbar/backup-restore.log
+
+#############################################################
+section_header "Barclamp configuration details collected with crowbar batch export"
+
+crowbar batch export > /var/log/crowbar/batch-export.log
+plog_files 0 /var/log/crowbar/batch-export.log
