@@ -339,3 +339,25 @@ if [ -e /opt/dell/bin/crowbar_batch ]; then
   plog_files 0 /var/log/crowbar/batch-export.log
   rm /var/log/crowbar/batch-export.log
 fi
+
+#############################################################
+section_header "Chef data"
+
+if [ -e /opt/dell/crowbar_framework/.crowbar-installed-ok ]; then
+  chef_export_dir=/var/log/crowbar/chef-export
+  mkdir -p ${chef_export_dir}/{node,role,databag}
+  for node in $(knife node list); do
+    knife node show -F json -l $node > ${chef_export_dir}/node/${node}.json
+  done
+  for role in $(knife role list); do
+    knife role show -F json $role > ${chef_export_dir}/role/${role}.json
+  done
+  for databag in $(knife data bag list); do
+    mkdir ${chef_export_dir}/databag/${databag}
+    for item in $(knife data bag show $databag); do
+      knife data bag show -F json $databag $item > ${chef_export_dir}/databag/${databag}/${item}.json
+    done
+  done
+  find_and_plog_files_0 $chef_export_dir -type f
+  rm -rf $chef_export_dir
+fi
