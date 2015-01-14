@@ -96,6 +96,10 @@ web_ui_admin_default_password "s3kr1t"
 neutron_admin_password=s3kr1t
 rabbit_password=s3kr1t
 connection=postgresql://nova:s3kr1t@192.168.124.81/nova
+   password: p4ssw0rt
+   service_password: service_p4ssw0rt
+   stack_domain_admin_password: 4dm1n_p4ssw0rt
+   auth_encryption_key: 4u7h_ke7
 EOF
 }
 
@@ -111,6 +115,10 @@ web_ui_admin_default_password "$CENSORED"
 neutron_admin_password=$CENSORED
 rabbit_password=$CENSORED
 connection=postgresql://nova:$CENSORED@192.168.124.81/nova
+   password: $CENSORED
+   service_password: $CENSORED
+   stack_domain_admin_password: $CENSORED
+   auth_encryption_key: $CENSORED
 EOF
 )
 
@@ -134,6 +142,14 @@ _capture_filter() {
 
                 # connection=postgresql://nova:s3kr1t@192.168.124.81/nova
                 -e 's!^\( *\([a-z_]\+_\)\?connection[a-z_]*=[a-z]\+://[a-z_]\+:\)[^@]\+@!\1'"$CENSORED"'@!'
+                # Filter passwords from crowbar batch export output
+                # [   ] password: p4ssw0rt
+                # [   ] service_password: service_p4ssw0rt
+                # [   ] stack_domain_admin_password: 4dm1n_p4ssw0rt
+                -e 's/\(^ *\(stack_domain_admin_\|service_\)\?password:\).*/\1 '"$CENSORED"'/'
+
+                # [   ] auth_encryption_key: 4u7h_ke7
+                -e 's/\(^ *auth_encryption_key:\).*/\1 '"$CENSORED"'/'
         )
         if (( ADD_OPTION_LOGS )); then
                 sed_args+=( -e 's/^M//g' )
@@ -186,6 +202,14 @@ find_and_plog_files () {
         files=$(find "$@" ! -name \*.gz ! -name \*.bz2)
         if [ -n "$files" ]; then
                 plog_files "$LOG_LINES" $files
+        fi
+}
+
+find_and_plog_files_0 () {
+        [ -d "$1" ] || return 0
+        files=$(find "$@" ! -name \*.gz ! -name \*.bz2)
+        if [ -n "$files" ]; then
+                plog_files 0 $files
         fi
 }
 
@@ -299,4 +323,41 @@ section_header "Cluster log files"
 
 if [ -d /var/log/cluster/ ]; then
   find_and_plog_files  /var/log/cluster   -type f
+fi
+
+#############################################################
+section_header "Backup and Restore log files"
+if [ -e /var/log/crowbar/backup-restore.log ]; then
+  plog_files 0 /var/log/crowbar/backup-restore.log
+fi
+
+#############################################################
+section_header "Barclamp configuration details collected with crowbar batch export"
+
+if [ -e /opt/dell/bin/crowbar_batch ]; then
+  crowbar batch export > /var/log/crowbar/batch-export.log
+  plog_files 0 /var/log/crowbar/batch-export.log
+  rm /var/log/crowbar/batch-export.log
+fi
+
+#############################################################
+section_header "Chef data"
+
+if [ -e /opt/dell/crowbar_framework/.crowbar-installed-ok ]; then
+  chef_export_dir=/var/log/crowbar/chef-export
+  mkdir -p ${chef_export_dir}/{node,role,databag}
+  for node in $(knife node list); do
+    knife node show -F json -l $node > ${chef_export_dir}/node/${node}.json
+  done
+  for role in $(knife role list); do
+    knife role show -F json $role > ${chef_export_dir}/role/${role}.json
+  done
+  for databag in $(knife data bag list); do
+    mkdir ${chef_export_dir}/databag/${databag}
+    for item in $(knife data bag show $databag); do
+      knife data bag show -F json $databag $item > ${chef_export_dir}/databag/${databag}/${item}.json
+    done
+  done
+  find_and_plog_files_0 $chef_export_dir -type f
+  rm -rf $chef_export_dir
 fi
