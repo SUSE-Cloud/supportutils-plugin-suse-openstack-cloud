@@ -226,6 +226,19 @@ find_and_plog_files  /var/log/nodes                       -type f
 find_and_plog_files  /var/log -path /var/log/crowbar\*    -type f
 find_and_plog_files  /var/log/apache2                     -type f
 plugin_tag "admin node PXE / TFTP configuration"
+echo; echo
+find                 /srv/tftpboot                        -maxdepth 1 -ls
+echo; echo
+find                 /srv/tftpboot/suse-*                 -maxdepth 2 -ls
+echo; echo
+find                 /srv/tftpboot/suse-11.3/repos/Cloud-PTF -ls
+echo; echo
+find                 /srv/tftpboot/suse-12.0/repos/SLE12-Cloud-Compute-PTF -ls
+echo; echo
+find                 /srv/tftpboot/windows-*              -maxdepth 2 -ls
+echo; echo
+find                 /srv/tftpboot/hyperv-*               -maxdepth 2 -ls
+echo; echo
 find                 /srv/tftpboot/discovery/pxelinux.cfg -ls
 echo; echo
 find_and_pconf_files /srv/tftpboot/discovery/pxelinux.cfg -type f
