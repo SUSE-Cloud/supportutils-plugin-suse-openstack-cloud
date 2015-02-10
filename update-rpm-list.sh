@@ -4,7 +4,7 @@
 # RPMs to check.
 #
 
-CLOUD_MEDIA_DIR=${1:-/srv/nfs/media/SUSE-CLOUD-4/}
+CLOUD_MEDIA_DIR=${1:-/srv/nfs/media/SUSE-CLOUD-5/}
 
 [[ ! -d $CLOUD_MEDIA_DIR ]] && echo "Directory doesn't exist: $CLOUD_MEDIA_DIR" && exit 1
 
