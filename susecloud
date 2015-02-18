@@ -382,3 +382,13 @@ if [ -e /opt/dell/crowbar_framework/.crowbar-installed-ok ]; then
   find_and_plog_files_0 $chef_export_dir -type f
   rm -rf $chef_export_dir
 fi
+
+###############################################################
+section_header "RabbitMQ broker"
+if [ -e /usr/sbin/rabbitmqctl ]; then
+    rabbitmq_tmpdir=$(mktemp -d)
+    rabbitmq_report_log=${rabbitmq_tmpdir}/rabbitmq_report.log
+    rabbitmqctl report > ${rabbitmq_report_log}
+    find_and_plog_files_0 ${rabbitmq_tmpdir} -type f
+    rm -rf ${rabbitmq_tmpdir}
+    fi
