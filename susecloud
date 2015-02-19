@@ -14,6 +14,10 @@ LOG_LINES=5000  # 0 means include the entire file
 
 [ -s $RCFILE ] && . $RCFILE || { echo "ERROR: Initializing resource file: $RCFILE"; exit 1; }
 
+# Directory to store logs create on the fly (for instance "chef report")
+TMPLOGS_DIR="/var/log/supportconfig"
+mkdir -p $TMPLOGS_DIR
+
 validate_rpm_if_installed() {
         thisrpm="$1"
         echo "#==[ Validating RPM ]=================================#"
@@ -282,6 +286,16 @@ if [ -e /etc/ceph/monmap ]; then
         monmaptool --print /etc/ceph/monmap
 else
         echo "/etc/ceph/monmap did not exist"
+fi
+
+#############################################################
+section_header "Ceph report"
+
+if [ -e /usr/bin/ceph ]; then
+    now=$(date +%s)
+    ceph_report_name=$TMPLOGS_DIR/ceph_report_${now}.txt
+    ceph report > $ceph_report_name
+    plog_files 0 $ceph_report_name
 fi
 
 #############################################################
