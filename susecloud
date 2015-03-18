@@ -264,6 +264,9 @@ plog_files 0 \
 
 find_and_plog_files  /root           -name screenlog.\*
 
+# old files changed by chef; might give a hint about some changes
+find_and_pconf_files /var/chef/backup -type f
+
 #############################################################
 section_header "Ceph config"
 
