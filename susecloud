@@ -353,7 +353,7 @@ if [ -e /opt/dell/crowbar_framework/.crowbar-installed-ok ]; then
     knife role show -F json $role > ${chef_export_dir}/role/${role}.json
   done
   for databag in $(knife data bag list); do
-    mkdir ${chef_export_dir}/databag/${databag}
+    mkdir -p ${chef_export_dir}/databag/${databag}
     for item in $(knife data bag show $databag); do
       knife data bag show -F json $databag $item > ${chef_export_dir}/databag/${databag}/${item}.json
     done
