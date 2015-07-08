@@ -1,8 +1,8 @@
 #!/bin/bash
 #############################################################
-# Name:        Supportconfig Plugin for SUSE Cloud
+# Name:        Supportconfig Plugin for SUSE OpenStack Cloud
 # Description: Gathers important troubleshooting information
-#              about SUSE Cloud
+#              about SUSE OpenStack Cloud
 # License:     GPLv2
 # Author:      Matt Barringer <mbarringer@suse.de>
 # Modified:    2012 August 29
@@ -182,7 +182,7 @@ if [ -n "$SUSECLOUD_PLUGIN_TEST" ]; then
 fi
 
 #############################################################
-section_header "Supportconfig Plugin for SUSE Cloud, v${SVER}"
+section_header "Supportconfig Plugin for SUSE OpenStack Cloud, v${SVER}"
 # The plugin already hardcodes a reference to this directory above, so we're
 # not introducing a new coupling with .spec files by using this absolute path here.
 if [ "$(grep VERSION /etc/SuSE-release 2> /dev/null | sed "s/.*= *//g")" == 12 ]; then
