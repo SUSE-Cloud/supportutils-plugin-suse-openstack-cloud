@@ -84,7 +84,7 @@ _capture() {
         fi
 }
 
-# test via: SUSECLOUD_PLUGIN_TEST=y ./susecloud
+# test via: SUSECLOUD_PLUGIN_TEST=y ./suse-openstack-cloud
 _filter_test_cases() {
         cat <<EOF
     "password": "s3kr1t",
@@ -186,9 +186,9 @@ section_header "Supportconfig Plugin for SUSE OpenStack Cloud, v${SVER}"
 # The plugin already hardcodes a reference to this directory above, so we're
 # not introducing a new coupling with .spec files by using this absolute path here.
 if [ "$(grep VERSION /etc/SuSE-release 2> /dev/null | sed "s/.*= *//g")" == 12 ]; then
-        rpm_list=/usr/lib/supportconfig/resources/susecloud-rpm-list-sle12
+        rpm_list=/usr/lib/supportconfig/resources/suse-openstack-cloud-rpm-list-sle12
 else
-        rpm_list=/usr/lib/supportconfig/resources/susecloud-rpm-list
+        rpm_list=/usr/lib/supportconfig/resources/suse-openstack-cloud-rpm-list
 fi
 for thisrpm in $(cat "$rpm_list"); do
         validate_rpm_if_installed "$thisrpm"
