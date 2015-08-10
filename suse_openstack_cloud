@@ -250,6 +250,19 @@ find_and_pconf_files /srv/tftpboot/discovery/pxelinux.cfg -type f
 find_and_pconf_files /srv/tftpboot/nodes                  -type f
 
 #############################################################
+section_header "Crowbar database"
+
+crowbar_db_dump_file=/opt/dell/crowbar_framework/db/data.yml
+rake_path=/opt/dell/crowbar_framework/
+pushd . >/dev/null
+cd $rake_path
+RAILS_ENV=production ./bin/rake db:data:dump
+popd >/dev/null
+
+find_and_plog_files_0 $crowbar_db_dump_file -type f
+rm -rf $crowbar_db_dump_file
+
+#############################################################
 section_header "Chef"
 
 # Don't capture private keys/certificates, just show the inode info
