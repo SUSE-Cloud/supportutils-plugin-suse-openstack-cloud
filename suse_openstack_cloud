@@ -254,7 +254,7 @@ pushd $rake_path >/dev/null
 RAILS_ENV=production ./bin/rake db:data:dump
 popd >/dev/null
 
-find_and_plog_files_0 $crowbar_db_dump_file -type f
+plog_files 0 $crowbar_db_dump_file
 rm -f $crowbar_db_dump_file
 
 #############################################################
