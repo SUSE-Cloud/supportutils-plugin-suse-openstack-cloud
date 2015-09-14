@@ -348,6 +348,7 @@ fi
 
 #############################################################
 section_header "Backup and Restore log files"
+
 if [ -e /var/log/crowbar/backup-restore.log ]; then
   plog_files 0 /var/log/crowbar/backup-restore.log
 fi
@@ -385,10 +386,15 @@ fi
 
 ###############################################################
 section_header "RabbitMQ broker"
+
 if [ -e /usr/sbin/rabbitmqctl ]; then
     rabbitmq_tmpdir=$(mktemp -d)
-    rabbitmq_report_log=${rabbitmq_tmpdir}/rabbitmq_report.log
-    rabbitmqctl report > ${rabbitmq_report_log}
+    rabbitmq_report_log=$rabbitmq_tmpdir/rabbitmq_report.log
+    source /etc/rabbitmq/rabbitmq-env.conf
+    pushd `pwd`
+    cd /var/lib/rabbitmq
+    su rabbitmq -s /bin/sh -c "/usr/lib64/rabbitmq/bin/rabbitmqctl report" > ${rabbitmq_report_log}
+    popd
     find_and_plog_files_0 ${rabbitmq_tmpdir} -type f
     rm -rf ${rabbitmq_tmpdir}
-    fi
+fi
