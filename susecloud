@@ -388,13 +388,8 @@ fi
 section_header "RabbitMQ broker"
 
 if [ -e /usr/sbin/rabbitmqctl ]; then
-    rabbitmq_tmpdir=$(mktemp -d)
-    rabbitmq_report_log=$rabbitmq_tmpdir/rabbitmq_report.log
-    source /etc/rabbitmq/rabbitmq-env.conf
-    pushd `pwd`
-    cd /var/lib/rabbitmq
-    su rabbitmq -s /bin/sh -c "/usr/lib64/rabbitmq/bin/rabbitmqctl report" > ${rabbitmq_report_log}
-    popd
-    find_and_plog_files_0 ${rabbitmq_tmpdir} -type f
-    rm -rf ${rabbitmq_tmpdir}
+    rabbitmqctl_report=/var/log/rabbitmq/rabbitmq_report
+    timeout 3 /usr/sbin/rabbitmqctl report &> ${rabbitmqctl_report}
+    plog_files 0 ${rabbitmqctl_report}
+    rm ${rabbitmqctl_report}
 fi
