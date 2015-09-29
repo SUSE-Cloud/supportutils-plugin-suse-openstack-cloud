@@ -219,7 +219,7 @@ section_header "Crowbar"
 
 pconf_files \
         /etc/crowbar.install.key \
-        /opt/dell/chef/data_bags/crowbar/bc-template-*.json
+        /opt/dell/chef/data_bags/crowbar/template-*.json
 find_and_pconf_files /etc/crowbar                         -type f
 find_and_plog_files  /opt/dell/crowbar_framework/log      -type f
 find_and_pconf_files /var/lib/crowbar/config              -type f
