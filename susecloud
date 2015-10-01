@@ -348,6 +348,7 @@ fi
 
 #############################################################
 section_header "Backup and Restore log files"
+
 if [ -e /var/log/crowbar/backup-restore.log ]; then
   plog_files 0 /var/log/crowbar/backup-restore.log
 fi
@@ -381,4 +382,14 @@ if [ -e /opt/dell/crowbar_framework/.crowbar-installed-ok ]; then
   done
   find_and_plog_files_0 $chef_export_dir -type f
   rm -rf $chef_export_dir
+fi
+
+###############################################################
+section_header "RabbitMQ broker"
+
+if [ -e /usr/sbin/rabbitmqctl ]; then
+    rabbitmqctl_report=/var/log/rabbitmq/rabbitmq_report
+    timeout 3 /usr/sbin/rabbitmqctl report &> ${rabbitmqctl_report}
+    plog_files 0 ${rabbitmqctl_report}
+    rm ${rabbitmqctl_report}
 fi
