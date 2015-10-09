@@ -249,10 +249,7 @@ find_and_pconf_files /srv/tftpboot/nodes                  -type f
 section_header "Crowbar database"
 
 crowbar_db_dump_file=/opt/dell/crowbar_framework/db/data.yml
-rake_path=/opt/dell/crowbar_framework/
-pushd $rake_path >/dev/null
-RAILS_ENV=production ./bin/rake db:data:dump
-popd >/dev/null
+su -s /bin/sh - crowbar sh -c "cd /opt/dell/crowbar_framework && RAILS_ENV=production ./bin/rake db:data:dump"
 
 plog_files 0 $crowbar_db_dump_file
 rm -f $crowbar_db_dump_file
