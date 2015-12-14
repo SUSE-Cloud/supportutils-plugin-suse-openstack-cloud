@@ -1,0 +1,6 @@
+language: bash
+sudo: false
+install:
+  - pip install --user bashate
+script:
+  - make test
