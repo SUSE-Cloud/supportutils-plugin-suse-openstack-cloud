@@ -15,78 +15,78 @@ LOG_LINES=5000  # 0 means include the entire file
 [ -s $RCFILE ] && . $RCFILE || { echo "ERROR: Initializing resource file: $RCFILE"; exit 1; }
 
 validate_rpm_if_installed() {
-        thisrpm="$1"
-        echo "#==[ Validating RPM ]=================================#"
-        if rpm -q "$thisrpm" >/dev/null 2>&1; then
-                echo "# rpm -V $thisrpm"
+    thisrpm="$1"
+    echo "#==[ Validating RPM ]=================================#"
+    if rpm -q "$thisrpm" >/dev/null 2>&1; then
+        echo "# rpm -V $thisrpm"
 
-                if rpm -V "$thisrpm"; then
-                        echo "Status: Passed"
-                else
-                        echo "Status: WARNING"
-                fi
+        if rpm -V "$thisrpm"; then
+            echo "Status: Passed"
         else
-                echo "package $thisrpm is not installed"
-                echo "Status: Skipped"
+            echo "Status: WARNING"
         fi
-        echo
+    else
+        echo "package $thisrpm is not installed"
+        echo "Status: Skipped"
+    fi
+    echo
 }
 
 pconf_files() {
-        _log_files 0 "Configuration File" "$@"
+    _log_files 0 "Configuration File" "$@"
 }
 
 plog_files() {
-        loglines="$1"
-        shift
-        _log_files "$loglines" "Log File" "$@"
+    loglines="$1"
+    shift
+    _log_files "$loglines" "Log File" "$@"
 }
 
 _log_files() {
-        loglines="$1" title="$2"
-        shift 2
+    loglines="$1" title="$2"
+    shift 2
 
-        for file in "$@"; do
-                _log_file "$loglines" "$title" "$file"
-        done
+    for file in "$@"; do
+        _log_file "$loglines" "$title" "$file"
+    done
 }
 
 _log_file() {
-        loglines="$1" title="$2" file="$3"
+    loglines="$1" title="$2" file="$3"
 
-        case "$file" in
-                *.tbz|*.bz2|*.gz|*.zip|*.xz)
-                        continue
-                        ;;
-        esac
+    case "$file" in
+        *.tbz|*.bz2|*.gz|*.zip|*.xz)
+            continue
+            ;;
+    esac
 
-        if ! [ -f "$file" ]; then
-                plugin_tag "$title" "$file - File not found"
-                continue
-        fi
+    if ! [ -f "$file" ]; then
+        plugin_tag "$title" "$file - File not found"
+        continue
+    fi
 
-        if [ "$loglines" -eq 0 ]; then
-                plugin_tag "$title" "$file"
-        else
-                plugin_tag "$title" "$file - Last $loglines Lines"
-        fi
+    if [ "$loglines" -eq 0 ]; then
+        plugin_tag "$title" "$file"
+    else
+        plugin_tag "$title" "$file - Last $loglines Lines"
+    fi
 
-        _capture "$loglines" "$file" | _capture_filter
-        echo
+    _capture "$loglines" "$file" | _capture_filter
+    echo
 }
 
 _capture() {
-        loglines="$1" file="$2"
-        if [ "$loglines" -eq 0 ]; then
-                cat "$file"
-        else
-                tail -"$loglines" "$file"
-        fi
+    loglines="$1" file="$2"
+    if [ "$loglines" -eq 0 ]; then
+        cat "$file"
+    else
+        tail -"$loglines" "$file"
+    fi
 }
 
 # test via: SUSECLOUD_PLUGIN_TEST=y ./suse-openstack-cloud
 _filter_test_cases() {
-        cat <<EOF
+    cat <<EOF
     "password": "s3kr1t",
     "token": "999888777666",
     "bmc_password": "s3kr1t",
@@ -123,62 +123,62 @@ EOF
 )
 
 _capture_filter() {
-        sed_args=(
-                # "password": "s3kr1t",
-                # "token": "999888777666",
-                # "bmc_password": "s3kr1t",
-                # "machine-install": { "password": "s3kr1t" },
-                -e 's/\("\([a-z_]\+\)\?\(passw\(or\)\?d\|token\)":\? \+"\+\)[^"]\+"/\1'"$CENSORED"'"/gi'
+    sed_args=(
+        # "password": "s3kr1t",
+        # "token": "999888777666",
+        # "bmc_password": "s3kr1t",
+        # "machine-install": { "password": "s3kr1t" },
+        -e 's/\("\([a-z_]\+\)\?\(passw\(or\)\?d\|token\)":\? \+"\+\)[^"]\+"/\1'"$CENSORED"'"/gi'
 
-                # web_ui_admin_default_password "s3kr1t"
-                -e 's/^\( *\([a-z_]\+\)\?passw\(or\)\?d \+"\+\)[^"]\+"/\1'"$CENSORED"'"/i'
+        # web_ui_admin_default_password "s3kr1t"
+        -e 's/^\( *\([a-z_]\+\)\?passw\(or\)\?d \+"\+\)[^"]\+"/\1'"$CENSORED"'"/i'
 
-                # .... "bmc_user"=>"root", "bmc_password"=>"cr0wBar!"}, {"token"=>"l33t", ...
-                -e 's/\("\([a-z_]\+\)\?\(passw\(or\)\?d\|token\)" *=> *"\+\)[^"]\+"/\1'"$CENSORED"'"/gi'
+        # .... "bmc_user"=>"root", "bmc_password"=>"cr0wBar!"}, {"token"=>"l33t", ...
+        -e 's/\("\([a-z_]\+\)\?\(passw\(or\)\?d\|token\)" *=> *"\+\)[^"]\+"/\1'"$CENSORED"'"/gi'
 
-                # neutron_admin_password=s3kr1t
-                # rabbit_password=s3kr1t
-                -e 's/^\( *[a-z_]\+_password[a-z_]*=\).\+/\1'"$CENSORED"'/'
+        # neutron_admin_password=s3kr1t
+        # rabbit_password=s3kr1t
+        -e 's/^\( *[a-z_]\+_password[a-z_]*=\).\+/\1'"$CENSORED"'/'
 
-                # connection=postgresql://nova:s3kr1t@192.168.124.81/nova
-                -e 's!^\( *\([a-z_]\+_\)\?connection[a-z_]*=[a-z]\+://[a-z_]\+:\)[^@]\+@!\1'"$CENSORED"'@!'
-                # Filter passwords from crowbar batch export output
-                # [   ] password: p4ssw0rt
-                # [   ] service_password: service_p4ssw0rt
-                # [   ] stack_domain_admin_password: 4dm1n_p4ssw0rt
-                -e 's/\(^ *\(stack_domain_admin_\|service_\)\?password:\).*/\1 '"$CENSORED"'/'
+        # connection=postgresql://nova:s3kr1t@192.168.124.81/nova
+        -e 's!^\( *\([a-z_]\+_\)\?connection[a-z_]*=[a-z]\+://[a-z_]\+:\)[^@]\+@!\1'"$CENSORED"'@!'
+        # Filter passwords from crowbar batch export output
+        # [   ] password: p4ssw0rt
+        # [   ] service_password: service_p4ssw0rt
+        # [   ] stack_domain_admin_password: 4dm1n_p4ssw0rt
+        -e 's/\(^ *\(stack_domain_admin_\|service_\)\?password:\).*/\1 '"$CENSORED"'/'
 
-                # [   ] auth_encryption_key: 4u7h_ke7
-                -e 's/\(^ *auth_encryption_key:\).*/\1 '"$CENSORED"'/'
+        # [   ] auth_encryption_key: 4u7h_ke7
+        -e 's/\(^ *auth_encryption_key:\).*/\1 '"$CENSORED"'/'
+    )
+    if (( ADD_OPTION_LOGS )); then
+        sed_args+=( -e 's/^M//g' )
+    else
+        sed_args+=(
+            -e '/^[[:space:]]*#/d'
+            -e '/^[[:space:]]*;/d'
+            -e '/^[[:space:]]*\/\//d'
+            -e 's/^M//g'
+            -e '/^$/d'
         )
-        if (( ADD_OPTION_LOGS )); then
-                sed_args+=( -e 's/^M//g' )
-        else
-                sed_args+=(
-                        -e '/^[[:space:]]*#/d'
-                        -e '/^[[:space:]]*;/d'
-                        -e '/^[[:space:]]*\/\//d'
-                        -e 's/^M//g'
-                        -e '/^$/d'
-                )
-        fi
-        sed "${sed_args[@]}"
+    fi
+    sed "${sed_args[@]}"
 }
 
 if [ -n "$SUSECLOUD_PLUGIN_TEST" ]; then
-        tmpdir=$( mktemp -d )
-        _filter_test_cases | _capture_filter > $tmpdir/got
-        echo "$_expected_test_results" > $tmpdir/expected
-        if cmp $tmpdir/{got,expected}; then
-                rm $tmpdir/{got,expected}
-                rmdir $tmpdir
-                exit 0
-        else
-                echo "Got unexpected test results:"
-                diff -u $tmpdir/{got,expected}
-                echo "Look in $tmpdir"
-                exit 1
-        fi
+    tmpdir=$( mktemp -d )
+    _filter_test_cases | _capture_filter > $tmpdir/got
+    echo "$_expected_test_results" > $tmpdir/expected
+    if cmp $tmpdir/{got,expected}; then
+        rm $tmpdir/{got,expected}
+        rmdir $tmpdir
+        exit 0
+    else
+        echo "Got unexpected test results:"
+        diff -u $tmpdir/{got,expected}
+        echo "Look in $tmpdir"
+        exit 1
+    fi
 fi
 
 #############################################################
@@ -187,39 +187,39 @@ section_header "Supportconfig Plugin for SUSE OpenStack Cloud, v${SVER}"
 # not introducing a new coupling with .spec files by using this absolute path here.
 rpm_list=rpm_list=/usr/lib/supportconfig/resources/suse-openstack-cloud-rpm-list
 for thisrpm in $(cat "$rpm_list"); do
-        validate_rpm_if_installed "$thisrpm"
+    validate_rpm_if_installed "$thisrpm"
 done
 
 find_and_pconf_files () {
-        [ -d "$1" ] || return 0
-        files=$(find "$@" ! -name \*.gz ! -name \*.bz2 ! -name \*.xz)
-        if [ -n "$files" ]; then
-                pconf_files $files
-        fi
+    [ -d "$1" ] || return 0
+    files=$(find "$@" ! -name \*.gz ! -name \*.bz2 ! -name \*.xz)
+    if [ -n "$files" ]; then
+        pconf_files $files
+    fi
 }
 
 find_and_plog_files () {
-        [ -d "$1" ] || return 0
-        files=$(find "$@" ! -name \*.gz ! -name \*.bz2 ! -name \*.xz)
-        if [ -n "$files" ]; then
-                plog_files "$LOG_LINES" $files
-        fi
+    [ -d "$1" ] || return 0
+    files=$(find "$@" ! -name \*.gz ! -name \*.bz2 ! -name \*.xz)
+    if [ -n "$files" ]; then
+        plog_files "$LOG_LINES" $files
+    fi
 }
 
 find_and_plog_files_0 () {
-        [ -d "$1" ] || return 0
-        files=$(find "$@" ! -name \*.gz ! -name \*.bz2 ! -name \*.xz)
-        if [ -n "$files" ]; then
-                plog_files 0 $files
-        fi
+    [ -d "$1" ] || return 0
+    files=$(find "$@" ! -name \*.gz ! -name \*.bz2 ! -name \*.xz)
+    if [ -n "$files" ]; then
+        plog_files 0 $files
+    fi
 }
 
 #############################################################
 section_header "Crowbar"
 
 pconf_files \
-        /etc/crowbar.install.key \
-        /opt/dell/chef/data_bags/crowbar/template-*.json
+    /etc/crowbar.install.key \
+    /opt/dell/chef/data_bags/crowbar/template-*.json
 find_and_pconf_files /etc/crowbar                         -type f
 find_and_plog_files  /opt/dell/crowbar_framework/log      -type f
 find_and_pconf_files /var/lib/crowbar/config              -type f
@@ -264,8 +264,8 @@ find_and_pconf_files /etc/chef       -type f  ! -name \*.pem
 
 find_and_plog_files  /var/log/chef   -type f
 plog_files 0 \
-        /var/chef/cache/chef-stacktrace.out \
-        /var/chef/cache/failed-run-data.json
+    /var/chef/cache/chef-stacktrace.out \
+    /var/chef/cache/failed-run-data.json
 
 find_and_plog_files  /root           -name screenlog.\*
 
@@ -287,9 +287,9 @@ fi
 section_header "Ceph monmap"
 
 if [ -e /etc/ceph/monmap ]; then
-        monmaptool --print /etc/ceph/monmap
+    monmaptool --print /etc/ceph/monmap
 else
-        echo "/etc/ceph/monmap did not exist"
+    echo "/etc/ceph/monmap did not exist"
 fi
 
 #############################################################
@@ -301,21 +301,21 @@ find_and_plog_files /var/log/ceph -type f
 section_header "OpenStack config files"
 
 for svc in keystone rabbitmq glance swift nova cinder neutron heat ceilometer; do
-        find_and_pconf_files /etc/$svc -type f -regex '.*\.\(co?nf\(ig\)?\|ini\|json\|filters\)'
+    find_and_pconf_files /etc/$svc -type f -regex '.*\.\(co?nf\(ig\)?\|ini\|json\|filters\)'
 
-        # Keep this grouped with other rabbitmq config files
-        case $svc in
-            rabbitmq)
-                pconf_files /etc/rabbitmq/enabled_plugins
-                ;;
-        esac
+    # Keep this grouped with other rabbitmq config files
+    case $svc in
+        rabbitmq)
+            pconf_files /etc/rabbitmq/enabled_plugins
+            ;;
+    esac
 done
 
 #############################################################
 section_header "OpenStack log files"
 
 for svc in keystone rabbitmq glance swift nova cinder neutron heat ceilometer; do
-        find_and_plog_files /var/log/$svc -type f
+    find_and_plog_files /var/log/$svc -type f
 done
 
 #############################################################
@@ -337,56 +337,56 @@ find_and_plog_files /var/log/mongodb -type f
 section_header "Corosync config"
 
 if [ -d /etc/corosync ]; then
-  if files=$(find /etc/corosync/ -type f | egrep -v 'authkey$'); then
-    if [ -n "$files" ]; then
-      pconf_files $files
+    if files=$(find /etc/corosync/ -type f | egrep -v 'authkey$'); then
+        if [ -n "$files" ]; then
+            pconf_files $files
+        fi
     fi
-  fi
 fi
 
 #############################################################
 section_header "Cluster log files"
 
 if [ -d /var/log/cluster/ ]; then
-  find_and_plog_files  /var/log/cluster   -type f
+    find_and_plog_files  /var/log/cluster   -type f
 fi
 
 #############################################################
 section_header "Backup and Restore log files"
 
 if [ -e /var/log/crowbar/backup-restore.log ]; then
-  plog_files 0 /var/log/crowbar/backup-restore.log
+    plog_files 0 /var/log/crowbar/backup-restore.log
 fi
 
 #############################################################
 section_header "Barclamp configuration details collected with crowbar batch export"
 
 if [ -e /opt/dell/bin/crowbar_batch ]; then
-  crowbar batch export > /var/log/crowbar/batch-export.log
-  plog_files 0 /var/log/crowbar/batch-export.log
-  rm /var/log/crowbar/batch-export.log
+    crowbar batch export > /var/log/crowbar/batch-export.log
+    plog_files 0 /var/log/crowbar/batch-export.log
+    rm /var/log/crowbar/batch-export.log
 fi
 
 #############################################################
 section_header "Chef data"
 
 if [ -e /opt/dell/crowbar_framework/.crowbar-installed-ok ]; then
-  chef_export_dir=/var/log/crowbar/chef-export
-  mkdir -p ${chef_export_dir}/{node,role,databag}
-  for node in $(knife node list); do
-    knife node show -F json -l $node > ${chef_export_dir}/node/${node}.json
-  done
-  for role in $(knife role list); do
-    knife role show -F json $role > ${chef_export_dir}/role/${role}.json
-  done
-  for databag in $(knife data bag list); do
-    mkdir -p ${chef_export_dir}/databag/${databag}
-    for item in $(knife data bag show $databag); do
-      knife data bag show -F json $databag $item > ${chef_export_dir}/databag/${databag}/${item}.json
+    chef_export_dir=/var/log/crowbar/chef-export
+    mkdir -p ${chef_export_dir}/{node,role,databag}
+    for node in $(knife node list); do
+        knife node show -F json -l $node > ${chef_export_dir}/node/${node}.json
     done
-  done
-  find_and_plog_files_0 $chef_export_dir -type f
-  rm -rf $chef_export_dir
+    for role in $(knife role list); do
+        knife role show -F json $role > ${chef_export_dir}/role/${role}.json
+    done
+    for databag in $(knife data bag list); do
+        mkdir -p ${chef_export_dir}/databag/${databag}
+        for item in $(knife data bag show $databag); do
+            knife data bag show -F json $databag $item > ${chef_export_dir}/databag/${databag}/${item}.json
+        done
+    done
+    find_and_plog_files_0 $chef_export_dir -type f
+    rm -rf $chef_export_dir
 fi
 
 ###############################################################
