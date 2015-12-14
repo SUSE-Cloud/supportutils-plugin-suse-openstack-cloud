@@ -89,7 +89,7 @@ _capture() {
     fi
 }
 
-# test via: SUSECLOUD_PLUGIN_TEST=y ./suse-openstack-cloud
+# test via: SUSECLOUD_PLUGIN_TEST=y ./suse_openstack_cloud
 _filter_test_cases() {
     cat <<EOF
     "password": "s3kr1t",
