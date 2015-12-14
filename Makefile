@@ -1,6 +1,6 @@
 SCRIPTS=suse_openstack_cloud $(wildcard *.sh)
 
-test: bash-check tabs-check bashate
+test: bash-check tabs-check bashate unit-tests
 
 bash-check:
 	@for f in $(SCRIPTS); do \
@@ -19,6 +19,9 @@ bashate:
 	    echo "bashate $$f"; \
 	    bashate --ignore=E006 $$f || exit; \
 	done
+
+unit-tests:
+	SUSECLOUD_PLUGIN_TEST=y ./suse_openstack_cloud
 
 suseinstall:
 	sudo zypper install python-bashate
