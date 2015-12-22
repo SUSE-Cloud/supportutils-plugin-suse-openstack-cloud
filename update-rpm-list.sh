@@ -6,6 +6,12 @@
 
 CLOUD_MEDIA_DIR=${1:-/srv/nfs/media/SUSE-OPENSTACK-CLOUD-6/}
 
-[[ ! -d $CLOUD_MEDIA_DIR ]] && echo "Directory doesn't exist: $CLOUD_MEDIA_DIR" && exit 1
+if [[ ! -d $CLOUD_MEDIA_DIR ]]; then
+    echo "Directory doesn't exist: $CLOUD_MEDIA_DIR" >&2
+    exit 1
+fi
 
-find $CLOUD_MEDIA_DIR -name *.rpm | sed 's/.*\///; s/-[0-9.+A-Za-z_~]\+-[0-9.]\+\.\(x86_64\|noarch\)\.rpm$//' | sort > suse-openstack-cloud-rpm-list
+find $CLOUD_MEDIA_DIR -name *.rpm |
+    sed 's/.*\///; s/-[0-9.+A-Za-z_~]\+-[0-9.]\+\.\(x86_64\|noarch\)\.rpm$//' |
+    sort \
+> suse-openstack-cloud-rpm-list
