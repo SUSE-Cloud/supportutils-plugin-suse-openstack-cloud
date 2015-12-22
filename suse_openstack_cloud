@@ -10,7 +10,7 @@
 
 SVER=1.0.0
 RCFILE="/usr/lib/supportconfig/resources/scplugin.rc"
-LOG_LINES=5000  # 0 means include the entire file
+LOG_LINES=10000  # 0 means include the entire file
 
 if [ -s $RCFILE ]; then
     if ! source $RCFILE; then
@@ -195,9 +195,13 @@ for thisrpm in $(cat "$rpm_list"); do
     validate_rpm_if_installed "$thisrpm"
 done
 
+_find_uncompressed () {
+    find "$@" ! -name \*.gz ! -name \*.bz2 ! -name \*.xz
+}
+
 find_and_pconf_files () {
     [ -d "$1" ] || return 0
-    files=$(find "$@" ! -name \*.gz ! -name \*.bz2 ! -name \*.xz)
+    files=$( _find_uncompressed "$@" )
     if [ -n "$files" ]; then
         pconf_files $files
     fi
@@ -205,7 +209,7 @@ find_and_pconf_files () {
 
 find_and_plog_files () {
     [ -d "$1" ] || return 0
-    files=$(find "$@" ! -name \*.gz ! -name \*.bz2 ! -name \*.xz)
+    files=$( _find_uncompressed "$@" )
     if [ -n "$files" ]; then
         plog_files "$LOG_LINES" $files
     fi
@@ -213,7 +217,7 @@ find_and_plog_files () {
 
 find_and_plog_files_0 () {
     [ -d "$1" ] || return 0
-    files=$(find "$@" ! -name \*.gz ! -name \*.bz2 ! -name \*.xz)
+    files=$( _find_uncompressed "$@" )
     if [ -n "$files" ]; then
         plog_files 0 $files
     fi
