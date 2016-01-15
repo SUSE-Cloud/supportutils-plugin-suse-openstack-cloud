@@ -407,3 +407,12 @@ if [ -e /usr/sbin/rabbitmqctl ]; then
     plog_files 0 ${rabbitmqctl_report}
     rm ${rabbitmqctl_report}
 fi
+
+###############################################################
+section_header "mkcloud"
+
+# This will not always collect files from customer clouds, but will
+# help with internal development.
+plog_files 0 /etc/motd
+plog_files 0 /root/mkcloud.config
+find_and_plog_files_0 /root -name \*.proposal
