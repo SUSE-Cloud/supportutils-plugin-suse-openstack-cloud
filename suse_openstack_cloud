@@ -195,13 +195,13 @@ for thisrpm in $(cat "$rpm_list"); do
     validate_rpm_if_installed "$thisrpm"
 done
 
-_find_uncompressed () {
-    find "$@" ! -name \*.gz ! -name \*.bz2 ! -name \*.xz
+_find_text_files () {
+    find "$@" -type f -exec grep -Iq . {} \; -and -print
 }
 
 find_and_pconf_files () {
     [ -d "$1" ] || return 0
-    files=$( _find_uncompressed "$@" )
+    files=$( _find_text_files "$@" )
     if [ -n "$files" ]; then
         pconf_files $files
     fi
@@ -209,7 +209,7 @@ find_and_pconf_files () {
 
 find_and_plog_files () {
     [ -d "$1" ] || return 0
-    files=$( _find_uncompressed "$@" )
+    files=$( _find_text_files "$@" )
     if [ -n "$files" ]; then
         plog_files "$LOG_LINES" $files
     fi
@@ -217,7 +217,7 @@ find_and_plog_files () {
 
 find_and_plog_files_0 () {
     [ -d "$1" ] || return 0
-    files=$( _find_uncompressed "$@" )
+    files=$( _find_text_files "$@" )
     if [ -n "$files" ]; then
         plog_files 0 $files
     fi
