@@ -379,7 +379,7 @@ fi
 #############################################################
 section_header "Chef data"
 
-if [ -e /opt/dell/crowbar_framework/.crowbar-installed-ok ]; then
+if [ -e /var/lib/crowbar/install/crowbar-installed-ok ]; then
     chef_export_dir=/var/log/crowbar/chef-export
     mkdir -p ${chef_export_dir}/{node,role,databag}
     for node in $(knife node list); do
