@@ -309,7 +309,7 @@ find_and_plog_files /var/log/ceph -type f
 #############################################################
 section_header "OpenStack config files"
 
-for svc in keystone rabbitmq glance swift nova cinder neutron heat ceilometer; do
+for svc in keystone rabbitmq glance swift nova cinder neutron heat ceilometer manila; do
     find_and_pconf_files /etc/$svc -type f -regex '.*\.\(co?nf\(ig\)?\|ini\|json\|filters\)'
 
     # Keep this grouped with other rabbitmq config files
@@ -323,7 +323,7 @@ done
 #############################################################
 section_header "OpenStack log files"
 
-for svc in keystone rabbitmq glance swift nova cinder neutron heat ceilometer; do
+for svc in keystone rabbitmq glance swift nova cinder neutron heat ceilometer manila; do
     find_and_plog_files /var/log/$svc -type f
 done
 
