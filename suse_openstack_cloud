@@ -277,6 +277,7 @@ plog_files 0 \
     /var/chef/cache/failed-run-data.json
 
 find_and_plog_files  /root           -name screenlog.\*
+find_and_plog_files  /var/chef/cache -type f -path */pause-file.lock\*
 
 # old files changed by chef; might give a hint about some changes
 find_and_pconf_files /var/chef/backup -type f
