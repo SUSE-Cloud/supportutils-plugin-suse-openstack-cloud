@@ -190,7 +190,7 @@ fi
 section_header "Supportconfig Plugin for SUSE OpenStack Cloud, v${SVER}"
 # The plugin already hardcodes a reference to this directory above, so we're
 # not introducing a new coupling with .spec files by using this absolute path here.
-rpm_list=rpm_list=/usr/lib/supportconfig/resources/suse-openstack-cloud-rpm-list
+rpm_list=/usr/lib/supportconfig/resources/suse-openstack-cloud-rpm-list
 for thisrpm in $(cat "$rpm_list"); do
     validate_rpm_if_installed "$thisrpm"
 done
