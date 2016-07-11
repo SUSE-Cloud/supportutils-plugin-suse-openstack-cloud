@@ -93,6 +93,7 @@ _capture() {
 _filter_test_cases() {
     cat <<EOF
     "password": "s3kr1t",
+    'password': 's3kr1t',
     "token": "999888777666",
     "bmc_password": "s3kr1t",
     "machine-install": { "password": "s3kr1t" },
@@ -112,6 +113,7 @@ CENSORED='<<CENSORED BY SUPPORTCONFIG PLUGIN>>'
 
 _expected_test_results=$( cat <<EOF
     "password": "$CENSORED",
+    'password': '$CENSORED',
     "token": "$CENSORED",
     "bmc_password": "$CENSORED",
     "machine-install": { "password": "$CENSORED" },
@@ -134,6 +136,8 @@ _capture_filter() {
         # "bmc_password": "s3kr1t",
         # "machine-install": { "password": "s3kr1t" },
         -e 's/\("\([a-z_]\+\)\?\(passw\(or\)\?d\|token\)":\? \+"\+\)[^"]\+"/\1'"$CENSORED"'"/gi'
+        # 'password': 's3kr1t',
+        -e "s/\('\([a-z_]\+\)\?\(passw\(or\)\?d\|token\)':\? \+'\+\)[^']\+'/\1$CENSORED'/gi"
 
         # web_ui_admin_default_password "s3kr1t"
         -e 's/^\( *\([a-z_]\+\)\?passw\(or\)\?d \+"\+\)[^"]\+"/\1'"$CENSORED"'"/i'
@@ -319,6 +323,9 @@ for svc in keystone rabbitmq glance swift nova cinder neutron heat ceilometer ma
             ;;
     esac
 done
+
+pconf_files /srv/www/openstack-dashboard/openstack_dashboard/local/local_settings.py
+find_and_pconf_files /srv/www/openstack-dashboard/openstack_dashboard/local/local_settings.d -type f -regex '.*\.py'
 
 #############################################################
 section_header "OpenStack log files"
