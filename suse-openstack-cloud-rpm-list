@@ -524,9 +524,7 @@ ruby2.1-rubygem-amqp-0_6
 ruby2.1-rubygem-apipie-rails
 ruby2.1-rubygem-archive
 ruby2.1-rubygem-arel
-ruby2.1-rubygem-autoprefixer-rails
 ruby2.1-rubygem-backports
-ruby2.1-rubygem-bootstrap-sass
 ruby2.1-rubygem-bson-1_11
 ruby2.1-rubygem-builder
 ruby2.1-rubygem-bundler
@@ -624,7 +622,6 @@ ruby2.1-rubygem-simple_navigation_renderers
 ruby2.1-rubygem-sinatra
 ruby2.1-rubygem-sinatra-contrib
 ruby2.1-rubygem-sprockets-2_11
-ruby2.1-rubygem-sprockets-helpers
 ruby2.1-rubygem-sprockets-rails
 ruby2.1-rubygem-sprockets-standalone
 ruby2.1-rubygem-sqlite3
