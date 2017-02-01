@@ -8,8 +8,6 @@ crowbar-core-branding-SOC
 crowbar-core-branding-upstream
 crowbar-devel
 crowbar-ha
-crowbar-hyperv
-crowbar-hyperv-data
 crowbar-init
 crowbar-openstack
 crowbar-ui
