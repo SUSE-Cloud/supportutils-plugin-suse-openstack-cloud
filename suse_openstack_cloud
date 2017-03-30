@@ -10,7 +10,7 @@
 
 SVER=1.0.0
 RCFILE="/usr/lib/supportconfig/resources/scplugin.rc"
-LOG_LINES=10000  # 0 means include the entire file
+LOG_LINES=0  # 0 means include the entire file
 
 if [ -s $RCFILE ]; then
     if ! source $RCFILE; then
