@@ -358,6 +358,61 @@ section_header "MongoDB log files"
 find_and_plog_files /var/log/mongodb -type f
 
 #############################################################
+section_header "Kafka config files"
+
+find_and_pconf_files /etc/kafka -type f
+
+#############################################################
+section_header "Kafka log files"
+
+find_and_plog_files /var/log/kafka -type f
+
+#############################################################
+section_header "Storm config files"
+
+find_and_pconf_files /etc/storm -type f
+
+#############################################################
+section_header "Storm log files"
+
+find_and_plog_files /var/log/storm -type f
+
+#############################################################
+section_header "elasticsearch config files"
+
+find_and_pconf_files /etc/elasticsearch -type f
+
+#############################################################
+section_header "elasticsearch log files"
+
+find_and_plog_files /var/log/elasticsearch -type f
+
+#############################################################
+section_header "kibana config files"
+
+find_and_pconf_files /etc/kibana -type f
+
+#############################################################
+section_header "kibana log files"
+
+find_and_plog_files /var/log/kibana -type f
+
+#############################################################
+section_header "zookeeper config files"
+
+find_and_pconf_files /etc/zookeeper -type f
+
+#############################################################
+section_header "zookeeper log files"
+
+find_and_plog_files /var/log/zookeeper -type f
+
+#############################################################
+section_header "ansible config files"
+
+find_and_pconf_files /etc/ansible -type f
+
+#############################################################
 section_header "Corosync config"
 
 if [ -d /etc/corosync ]; then
