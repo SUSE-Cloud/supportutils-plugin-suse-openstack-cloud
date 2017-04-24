@@ -314,8 +314,12 @@ find_and_plog_files /var/log/ceph -type f
 #############################################################
 section_header "OpenStack config files"
 
-for svc in keystone rabbitmq glance swift nova cinder neutron heat ceilometer manila barbican magnum trove designate sahara ironic; do
-    find_and_pconf_files /etc/$svc -type f -regex '.*\.\(co?nf\(ig\)?\|ini\|json\|filters\)'
+for svc in keystone rabbitmq glance swift nova cinder neutron heat ceilometer \
+    manila barbican magnum monasca monasca-log-agent monasca-log-persister \
+    monasca-log-metrics monasca-log-transformer monasca-notification \
+    monasca-persister monasca-thresh trove designate sahara ironic; do
+    find_and_pconf_files /etc/$svc -type f -regex \
+        '.*\.\(co?nf\(ig\)?\|ini\|json\|filters\|y\(a\)?ml\)'
 
     # Keep this grouped with other rabbitmq config files
     case $svc in
@@ -331,7 +335,10 @@ find_and_pconf_files /srv/www/openstack-dashboard/openstack_dashboard/local/loca
 #############################################################
 section_header "OpenStack log files"
 
-for svc in keystone rabbitmq glance swift nova cinder neutron heat ceilometer manila barbican magnum trove designate sahara ironic; do
+for svc in keystone rabbitmq glance swift nova cinder neutron heat ceilometer \
+    manila barbican magnum monasca monasca-api monasca-log-metrics \
+    monasca-log-transformer monasca-persister monasca-agent monasca-log-agent \
+    monasca-log-persister monasca-notification trove designate sahara ironic; do
     find_and_plog_files /var/log/$svc -type f
 done
 
@@ -349,6 +356,61 @@ find_and_plog_files /var/log/openvswitch -type f
 section_header "MongoDB log files"
 
 find_and_plog_files /var/log/mongodb -type f
+
+#############################################################
+section_header "Kafka config files"
+
+find_and_pconf_files /etc/kafka -type f
+
+#############################################################
+section_header "Kafka log files"
+
+find_and_plog_files /var/log/kafka -type f
+
+#############################################################
+section_header "Storm config files"
+
+find_and_pconf_files /etc/storm -type f
+
+#############################################################
+section_header "Storm log files"
+
+find_and_plog_files /var/log/storm -type f
+
+#############################################################
+section_header "elasticsearch config files"
+
+find_and_pconf_files /etc/elasticsearch -type f
+
+#############################################################
+section_header "elasticsearch log files"
+
+find_and_plog_files /var/log/elasticsearch -type f
+
+#############################################################
+section_header "kibana config files"
+
+find_and_pconf_files /etc/kibana -type f
+
+#############################################################
+section_header "kibana log files"
+
+find_and_plog_files /var/log/kibana -type f
+
+#############################################################
+section_header "zookeeper config files"
+
+find_and_pconf_files /etc/zookeeper -type f
+
+#############################################################
+section_header "zookeeper log files"
+
+find_and_plog_files /var/log/zookeeper -type f
+
+#############################################################
+section_header "ansible config files"
+
+find_and_pconf_files /etc/ansible -type f
 
 #############################################################
 section_header "Corosync config"
