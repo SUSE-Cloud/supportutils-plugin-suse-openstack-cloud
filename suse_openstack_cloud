@@ -276,6 +276,7 @@ echo; echo
 find_and_pconf_files /etc/chef       -type f  ! -name \*.pem
 
 find_and_plog_files  /var/log/chef   -type f
+find_and_plog_files  /var/log/couchdb   -type f
 plog_files 0 \
     /var/chef/cache/chef-stacktrace.out \
     /var/chef/cache/failed-run-data.json
