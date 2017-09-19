@@ -270,6 +270,25 @@ plog_files 0 $crowbar_db_dump_file
 rm -f $crowbar_db_dump_file
 
 #############################################################
+section_header "MariaDB"
+
+if rpm -q mariadb; then
+    find_and_plog_files  /var/log/mysql   -type f
+
+    mariadb_variables_file=/tmp/mariadb_variables
+    mariadb_status_file=/tmp/mariadb_status
+
+    mysql -u monitoring -e 'SHOW VARIABLES;' > $mariadb_variables_file
+    mysql -u monitoring -e 'SHOW STATUS;' > $mariadb_status_file
+
+    plog_files 0 $mariadb_variables_file
+    plog_files 0 $mariadb_status_file
+
+    rm -f $mariadb_variables_file
+    rm -f $mariadb_status_file
+fi
+
+#############################################################
 section_header "Chef"
 
 # Don't capture private keys/certificates, just show the inode info
