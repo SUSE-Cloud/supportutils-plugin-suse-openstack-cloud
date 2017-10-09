@@ -240,6 +240,7 @@ find_and_pconf_files /var/lib/chef/solr/conf              -type f
 find_and_plog_files  /var/log/nodes                       -type f
 find_and_plog_files  /var/log -path /var/log/crowbar\*    -type f
 find_and_plog_files  /var/log/apache2                     -type f
+plog_files 0         /var/log/monasca-installer.log
 plugin_tag "admin node PXE / TFTP configuration"
 echo; echo
 find                 /srv/tftpboot                        -maxdepth 1 -ls
