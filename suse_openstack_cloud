@@ -508,3 +508,7 @@ section_header "mkcloud"
 plog_files 0 /etc/motd
 plog_files 0 /root/mkcloud.config
 find_and_plog_files_0 /root -name \*.proposal
+###############################################################
+section_header "ardana"
+
+plog_files 0 /var/lib/ardana/.ansible/ansible.log
