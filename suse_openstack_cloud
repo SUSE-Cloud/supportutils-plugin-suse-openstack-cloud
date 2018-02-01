@@ -515,3 +515,4 @@ plog_files 0 /var/lib/ardana/.ansible/ansible.log
 find_and_plog_files_0 /var/lib/ardana/my_cloud/definition    -type f
 find_and_plog_files_0 /var/log/ardana-service/logs           -type f
 find_and_pconf_files 0 /etc/ardana-service                   -type f
+pconf_files  /var/lib/ardana/.ansible.cfg
