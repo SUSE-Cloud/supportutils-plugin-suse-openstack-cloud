@@ -340,7 +340,7 @@ for svc in keystone rabbitmq glance swift nova cinder neutron heat ceilometer \
     manila barbican magnum monasca monasca-log-agent monasca-log-persister \
     monasca-log-metrics monasca-log-transformer monasca-notification \
     monasca-persister monasca-thresh trove designate sahara ironic ec2api; do
-    find_and_pconf_files /etc/$svc -type f -regex \
+    find_and_pconf_files /etc/$svc /opt/stack/service/$svc -type f -regex \
         '.*\.\(co?nf\(ig\)?\|ini\|json\|filters\|y\(a\)?ml\)'
 
     # Keep this grouped with other rabbitmq config files
@@ -357,7 +357,7 @@ find_and_pconf_files /srv/www/openstack-dashboard/openstack_dashboard/local/loca
 #############################################################
 section_header "OpenStack log files"
 
-for svc in keystone rabbitmq glance swift nova cinder neutron heat ceilometer \
+for svc in keystone rabbitmq qpidd glance swift nova cinder neutron heat ceilometer \
     manila barbican magnum monasca monasca-api monasca-log-metrics \
     monasca-log-transformer monasca-persister monasca-agent monasca-log-agent \
     monasca-log-persister monasca-notification trove designate sahara ironic ec2-api; do
@@ -508,3 +508,14 @@ section_header "mkcloud"
 plog_files 0 /etc/motd
 plog_files 0 /root/mkcloud.config
 find_and_plog_files_0 /root -name \*.proposal
+###############################################################
+section_header "ardana"
+
+plog_files 0 /var/lib/ardana/.ansible/ansible.log
+find_and_plog_files_0 \
+    /var/lib/ardana/openstack/my_cloud/definition \
+    /var/log/ardana-service/logs                             -type f
+find_and_pconf_files 0 /etc/ardana-service                   -type f
+pconf_files \
+    /var/lib/ardana/.ansible.cfg \
+    /opt/ardana_packager/ardana-*/sles_venv/*packages
