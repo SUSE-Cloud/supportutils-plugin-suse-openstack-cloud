@@ -140,7 +140,6 @@ openstack-cinder-doc
 openstack-cinder-scheduler
 openstack-cinder-volume
 openstack-dashboard
-openstack-dashboard-theme-HPE
 openstack-dashboard-theme-SUSE
 openstack-designate
 openstack-designate-agent
