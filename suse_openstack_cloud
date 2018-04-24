@@ -260,6 +260,12 @@ echo; echo
 find_and_pconf_files /srv/tftpboot/discovery/pxelinux.cfg -type f
 find_and_pconf_files /srv/tftpboot/nodes                  -type f
 
+echo; echo
+find                 /var/lib/crowbar/upgrade -ls
+if ls /var/lib/crowbar/upgrade/*progress.yml >/dev/null 2>&1 ; then
+    pconf_files /var/lib/crowbar/upgrade/*progress.yml
+fi
+
 #############################################################
 section_header "Crowbar database"
 
