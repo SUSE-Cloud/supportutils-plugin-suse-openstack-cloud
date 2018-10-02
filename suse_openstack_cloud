@@ -101,6 +101,7 @@ web_ui_admin_default_password "s3kr1t"
 .... "bmc_user"=>"root", "bmc_password"=>"cr0wBar!"}, {"token"=>"l33t", ...
 neutron_admin_password=s3kr1t
 rabbit_password=s3kr1t
+    ilo-password: s3kr1t
 connection=postgresql://nova:s3kr1t@192.168.124.81/nova
    password: p4ssw0rt
    service_password: service_p4ssw0rt
@@ -121,6 +122,7 @@ web_ui_admin_default_password "$CENSORED"
 .... "bmc_user"=>"root", "bmc_password"=>"$CENSORED"}, {"token"=>"$CENSORED", ...
 neutron_admin_password=$CENSORED
 rabbit_password=$CENSORED
+    ilo-password: $CENSORED
 connection=postgresql://nova:$CENSORED@192.168.124.81/nova
    password: $CENSORED
    service_password: $CENSORED
@@ -148,6 +150,9 @@ _capture_filter() {
         # neutron_admin_password=s3kr1t
         # rabbit_password=s3kr1t
         -e 's/^\( *[a-z_]\+_password[a-z_]*=\).\+/\1'"$CENSORED"'/'
+
+        # ilo-password: s3kr1t
+        -e 's/^\( *ilo-password: \).\+/\1'"$CENSORED"'/'
 
         # connection=postgresql://nova:s3kr1t@192.168.124.81/nova
         -e 's!^\( *\([a-z_]\+_\)\?connection[a-z_]*=[a-z]\+://[a-z_]\+:\)[^@]\+@!\1'"$CENSORED"'@!'
