@@ -359,6 +359,9 @@ for svc in keystone rabbitmq glance swift nova cinder neutron heat ceilometer \
         rabbitmq)
             pconf_files /etc/rabbitmq/enabled_plugins
             ;;
+        neutron)
+            find_and_pconf_files /var/lib/neutron/ha_confs/
+            ;;
     esac
 done
 
