@@ -530,3 +530,11 @@ find_and_pconf_files 0 /etc/ardana-service                   -type f
 pconf_files \
     /var/lib/ardana/.ansible.cfg \
     /opt/ardana_packager/ardana-*/sles_venv/*packages
+
+###############################################################
+section_header "ops-console"
+
+# Ops Console only on Ardana based deployments
+if [ -d /var/log/ops-console/ ]; then
+    find_and_plog_files  /var/log/ops-console   -type f
+fi
