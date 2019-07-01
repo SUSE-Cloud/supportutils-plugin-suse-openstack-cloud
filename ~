@@ -525,14 +525,7 @@ section_header "ardana"
 plog_files 0 /var/lib/ardana/.ansible/ansible.log
 find_and_plog_files_0 \
     /var/lib/ardana/openstack/my_cloud/ \
-<<<<<<< HEAD
     /var/lib/ardana/scratch/ansible/next/ardana/ansible/ \
-=======
-<<<<<<< HEAD
-=======
-    /var/lib/ardana/scratch/ansible/next/ardana/ansible/ \
->>>>>>> 39e99a3... Add the collection of the "scratch" dir to capture the last deployment
->>>>>>> 4001967ff4d35e342e4c57ed69075ed7c702753b
     /var/log/ardana-service/logs                             -type f
 find_and_pconf_files 0 /etc/ardana-service                   -type f
 pconf_files \
