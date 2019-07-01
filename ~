@@ -1,0 +1,541 @@
+#!/bin/bash
+#############################################################
+# Name:        Supportconfig Plugin for SUSE OpenStack Cloud
+# Description: Gathers important troubleshooting information
+#              about SUSE OpenStack Cloud
+# License:     GPLv2
+# Author:      Matt Barringer <mbarringer@suse.de>
+# Modified:    2012 August 29
+#############################################################
+
+SVER=1.0.0
+RCFILE="/usr/lib/supportconfig/resources/scplugin.rc"
+LOG_LINES=10000  # 0 means include the entire file
+
+if [ -s $RCFILE ]; then
+    if ! source $RCFILE; then
+        echo "ERROR: Initializing resource file: $RCFILE" >&2
+        exit 1
+    fi
+fi
+
+validate_rpm_if_installed() {
+    thisrpm="$1"
+    echo "#==[ Validating RPM ]=================================#"
+    if rpm -q "$thisrpm" >/dev/null 2>&1; then
+        echo "# rpm -V $thisrpm"
+
+        if rpm -V "$thisrpm"; then
+            echo "Status: Passed"
+        else
+            echo "Status: WARNING"
+        fi
+    else
+        echo "package $thisrpm is not installed"
+        echo "Status: Skipped"
+    fi
+    echo
+}
+
+pconf_files() {
+    _log_files 0 "Configuration File" "$@"
+}
+
+plog_files() {
+    loglines="$1"
+    shift
+    _log_files "$loglines" "Log File" "$@"
+}
+
+_log_files() {
+    loglines="$1" title="$2"
+    shift 2
+
+    for file in "$@"; do
+        _log_file "$loglines" "$title" "$file"
+    done
+}
+
+_log_file() {
+    loglines="$1" title="$2" file="$3"
+
+    case "$file" in
+        *.tbz|*.bz2|*.gz|*.zip|*.xz)
+            continue
+            ;;
+    esac
+
+    if ! [ -f "$file" ]; then
+        plugin_tag "$title" "$file - File not found"
+        continue
+    fi
+
+    if [ "$loglines" -eq 0 ]; then
+        plugin_tag "$title" "$file"
+    else
+        plugin_tag "$title" "$file - Last $loglines Lines"
+    fi
+
+    _capture "$loglines" "$file" | _capture_filter
+    echo
+}
+
+_capture() {
+    loglines="$1" file="$2"
+    if [ "$loglines" -eq 0 ]; then
+        cat "$file"
+    else
+        tail -"$loglines" "$file"
+    fi
+}
+
+# test via: SUSECLOUD_PLUGIN_TEST=y ./suse_openstack_cloud
+_filter_test_cases() {
+    cat <<EOF
+    "password": "s3kr1t",
+    'password': 's3kr1t',
+    "token": "999888777666",
+    "bmc_password": "s3kr1t",
+    "machine-install": { "password": "s3kr1t" },
+web_ui_admin_default_password "s3kr1t"
+.... "bmc_user"=>"root", "bmc_password"=>"cr0wBar!"}, {"token"=>"l33t", ...
+neutron_admin_password=s3kr1t
+rabbit_password=s3kr1t
+    ilo-password: s3kr1t
+connection=postgresql://nova:s3kr1t@192.168.124.81/nova
+   password: p4ssw0rt
+   service_password: service_p4ssw0rt
+   stack_domain_admin_password: 4dm1n_p4ssw0rt
+   auth_encryption_key: 4u7h_ke7
+EOF
+}
+
+CENSORED='<<CENSORED BY SUPPORTCONFIG PLUGIN>>'
+
+_expected_test_results=$( cat <<EOF
+    "password": "$CENSORED",
+    'password': '$CENSORED',
+    "token": "$CENSORED",
+    "bmc_password": "$CENSORED",
+    "machine-install": { "password": "$CENSORED" },
+web_ui_admin_default_password "$CENSORED"
+.... "bmc_user"=>"root", "bmc_password"=>"$CENSORED"}, {"token"=>"$CENSORED", ...
+neutron_admin_password=$CENSORED
+rabbit_password=$CENSORED
+    ilo-password: $CENSORED
+connection=postgresql://nova:$CENSORED@192.168.124.81/nova
+   password: $CENSORED
+   service_password: $CENSORED
+   stack_domain_admin_password: $CENSORED
+   auth_encryption_key: $CENSORED
+EOF
+)
+
+_capture_filter() {
+    sed_args=(
+        # "password": "s3kr1t",
+        # "token": "999888777666",
+        # "bmc_password": "s3kr1t",
+        # "machine-install": { "password": "s3kr1t" },
+        -e 's/\("\([a-z_]\+\)\?\(passw\(or\)\?d\|token\)":\? \+"\+\)[^"]\+"/\1'"$CENSORED"'"/gi'
+        # 'password': 's3kr1t',
+        -e "s/\('\([a-z_]\+\)\?\(passw\(or\)\?d\|token\)':\? \+'\+\)[^']\+'/\1$CENSORED'/gi"
+
+        # web_ui_admin_default_password "s3kr1t"
+        -e 's/^\( *\([a-z_]\+\)\?passw\(or\)\?d \+"\+\)[^"]\+"/\1'"$CENSORED"'"/i'
+
+        # .... "bmc_user"=>"root", "bmc_password"=>"cr0wBar!"}, {"token"=>"l33t", ...
+        -e 's/\("\([a-z_]\+\)\?\(passw\(or\)\?d\|token\)" *=> *"\+\)[^"]\+"/\1'"$CENSORED"'"/gi'
+
+        # neutron_admin_password=s3kr1t
+        # rabbit_password=s3kr1t
+        -e 's/^\( *[a-z_]\+_password[a-z_]*=\).\+/\1'"$CENSORED"'/'
+
+        # ilo-password: s3kr1t
+        -e 's/^\( *ilo-password: \).\+/\1'"$CENSORED"'/'
+
+        # connection=postgresql://nova:s3kr1t@192.168.124.81/nova
+        -e 's!^\( *\([a-z_]\+_\)\?connection[a-z_]*=[a-z]\+://[a-z_]\+:\)[^@]\+@!\1'"$CENSORED"'@!'
+        # Filter passwords from crowbar batch export output
+        # [   ] password: p4ssw0rt
+        # [   ] service_password: service_p4ssw0rt
+        # [   ] stack_domain_admin_password: 4dm1n_p4ssw0rt
+        -e 's/\(^ *\(stack_domain_admin_\|service_\)\?password:\).*/\1 '"$CENSORED"'/'
+
+        # [   ] auth_encryption_key: 4u7h_ke7
+        -e 's/\(^ *auth_encryption_key:\).*/\1 '"$CENSORED"'/'
+    )
+    if (( ADD_OPTION_LOGS )); then
+        sed_args+=( -e 's/^M//g' )
+    else
+        sed_args+=(
+            -e '/^[[:space:]]*#/d'
+            -e '/^[[:space:]]*;/d'
+            -e '/^[[:space:]]*\/\//d'
+            -e 's/^M//g'
+            -e '/^$/d'
+        )
+    fi
+    sed "${sed_args[@]}"
+}
+
+if [ -n "$SUSECLOUD_PLUGIN_TEST" ]; then
+    tmpdir=$( mktemp -d )
+    _filter_test_cases | _capture_filter > $tmpdir/got
+    echo "$_expected_test_results" > $tmpdir/expected
+    if cmp $tmpdir/{got,expected}; then
+        rm $tmpdir/{got,expected}
+        rmdir $tmpdir
+        exit 0
+    else
+        echo "Got unexpected test results:"
+        diff -u $tmpdir/{got,expected}
+        echo "Look in $tmpdir"
+        exit 1
+    fi
+fi
+
+#############################################################
+section_header "Supportconfig Plugin for SUSE OpenStack Cloud, v${SVER}"
+# The plugin already hardcodes a reference to this directory above, so we're
+# not introducing a new coupling with .spec files by using this absolute path here.
+rpm_list=/usr/lib/supportconfig/resources/suse-openstack-cloud-rpm-list
+for thisrpm in $(cat "$rpm_list"); do
+    validate_rpm_if_installed "$thisrpm"
+done
+
+_find_uncompressed () {
+    find "$@" ! -name \*.gz ! -name \*.bz2 ! -name \*.xz
+}
+
+find_and_pconf_files () {
+    [ -d "$1" ] || return 0
+    files=$( _find_uncompressed "$@" )
+    if [ -n "$files" ]; then
+        pconf_files $files
+    fi
+}
+
+find_and_plog_files () {
+    [ -d "$1" ] || return 0
+    files=$( _find_uncompressed "$@" )
+    if [ -n "$files" ]; then
+        plog_files "$LOG_LINES" $files
+    fi
+}
+
+find_and_plog_files_0 () {
+    [ -d "$1" ] || return 0
+    files=$( _find_uncompressed "$@" )
+    if [ -n "$files" ]; then
+        plog_files 0 $files
+    fi
+}
+
+#############################################################
+section_header "Crowbar"
+
+pconf_files \
+    /etc/crowbar.install.key \
+    /opt/dell/chef/data_bags/crowbar/template-*.json
+find_and_pconf_files /etc/crowbar                         -type f
+find_and_plog_files  /opt/dell/crowbar_framework/log      -type f
+find_and_pconf_files /var/lib/crowbar/config              -type f
+find_and_pconf_files /var/lib/chef/solr/conf              -type f
+find_and_plog_files  /var/log/nodes                       -type f
+find_and_plog_files  /var/log -path /var/log/crowbar\*    -type f
+find_and_plog_files  /var/log/apache2                     -type f
+plog_files 0         /var/log/monasca-installer.log
+plugin_tag "admin node PXE / TFTP configuration"
+echo; echo
+find                 /srv/tftpboot                        -maxdepth 1 -ls
+echo; echo
+find                 /srv/tftpboot/suse-*                 -maxdepth 2 -ls
+echo; echo
+find                 /srv/tftpboot/suse-11.3/repos/Cloud-PTF -ls
+echo; echo
+find                 /srv/tftpboot/suse-12.0/repos/SLE12-Cloud-Compute-PTF -ls
+echo; echo
+find                 /srv/tftpboot/windows-*              -maxdepth 2 -ls
+echo; echo
+find                 /srv/tftpboot/hyperv-*               -maxdepth 2 -ls
+echo; echo
+find                 /srv/tftpboot/discovery/pxelinux.cfg -ls
+echo; echo
+find_and_pconf_files /srv/tftpboot/discovery/pxelinux.cfg -type f
+find_and_pconf_files /srv/tftpboot/nodes                  -type f
+
+echo; echo
+find                 /var/lib/crowbar/upgrade -ls
+if ls /var/lib/crowbar/upgrade/*progress.yml >/dev/null 2>&1 ; then
+    pconf_files /var/lib/crowbar/upgrade/*progress.yml
+fi
+
+#############################################################
+section_header "Crowbar database"
+
+crowbar_db_dump_file=/opt/dell/crowbar_framework/db/data.yml
+su -s /bin/sh - crowbar sh -c "cd /opt/dell/crowbar_framework && RAILS_ENV=production ./bin/rake db:data:dump"
+
+plog_files 0 $crowbar_db_dump_file
+rm -f $crowbar_db_dump_file
+
+#############################################################
+section_header "MariaDB"
+
+if rpm -q mariadb; then
+    find_and_plog_files  /var/log/mysql   -type f
+
+    mariadb_variables_file=/tmp/mariadb_variables
+    mariadb_status_file=/tmp/mariadb_status
+
+    mysql -u monitoring -e 'SHOW VARIABLES;' > $mariadb_variables_file
+    mysql -u monitoring -e 'SHOW STATUS;' > $mariadb_status_file
+
+    plog_files 0 $mariadb_variables_file
+    plog_files 0 $mariadb_status_file
+
+    rm -f $mariadb_variables_file
+    rm -f $mariadb_status_file
+fi
+
+#############################################################
+section_header "Chef"
+
+# Don't capture private keys/certificates, just show the inode info
+[ -d /etc/chef ] && find /etc/chef -type f -name \*.pem -ls
+echo; echo
+find_and_pconf_files /etc/chef       -type f  ! -name \*.pem
+
+find_and_plog_files  /var/log/chef   -type f
+find_and_plog_files  /var/log/couchdb   -type f
+plog_files 0 \
+    /var/chef/cache/chef-stacktrace.out \
+    /var/chef/cache/failed-run-data.json
+
+find_and_plog_files  /root           -name screenlog.\*
+find_and_plog_files  /var/chef/cache -type f -path */pause-file.lock\*
+
+# old files changed by chef; might give a hint about some changes
+find_and_pconf_files /var/chef/backup -type f
+
+#############################################################
+section_header "Ceph config"
+
+if [ -d /etc/ceph ]; then
+    if files=$(find /etc/ceph -type f | egrep -v '(/monmap|\.keyring)$'); then
+        if [ -n "$files" ]; then
+            pconf_files $files
+        fi
+    fi
+fi
+
+#############################################################
+section_header "Ceph monmap"
+
+if [ -e /etc/ceph/monmap ]; then
+    monmaptool --print /etc/ceph/monmap
+else
+    echo "/etc/ceph/monmap did not exist"
+fi
+
+#############################################################
+section_header "Ceph log files"
+
+find_and_plog_files /var/log/ceph -type f
+
+#############################################################
+section_header "OpenStack config files"
+
+for svc in keystone rabbitmq glance swift nova cinder neutron heat ceilometer \
+    manila barbican magnum monasca monasca-log-agent monasca-log-persister \
+    monasca-log-metrics monasca-log-transformer monasca-notification \
+    monasca-persister monasca-thresh trove designate sahara ironic ec2api; do
+    find_and_pconf_files /etc/$svc /opt/stack/service/$svc -type f -regex \
+        '.*\.\(co?nf\(ig\)?\|ini\|json\|filters\|y\(a\)?ml\)'
+
+    # Keep this grouped with other rabbitmq config files
+    case $svc in
+        rabbitmq)
+            pconf_files /etc/rabbitmq/enabled_plugins
+            ;;
+    esac
+done
+
+pconf_files /srv/www/openstack-dashboard/openstack_dashboard/local/local_settings.py
+find_and_pconf_files /srv/www/openstack-dashboard/openstack_dashboard/local/local_settings.d -type f -regex '.*\.py'
+
+#############################################################
+section_header "OpenStack log files"
+
+for svc in keystone rabbitmq qpidd glance swift nova cinder neutron heat ceilometer \
+    manila barbican magnum monasca monasca-api monasca-log-metrics \
+    monasca-log-transformer monasca-persister monasca-agent monasca-log-agent \
+    monasca-log-persister monasca-notification trove designate sahara ironic ec2-api; do
+    find_and_plog_files /var/log/$svc -type f
+done
+
+#############################################################
+section_header "Open vSwitch config files"
+
+find_and_pconf_files /etc/openvswitch -type f
+
+#############################################################
+section_header "Open vSwitch log files"
+
+find_and_plog_files /var/log/openvswitch -type f
+
+#############################################################
+section_header "MongoDB log files"
+
+find_and_plog_files /var/log/mongodb -type f
+
+#############################################################
+section_header "Kafka config files"
+
+find_and_pconf_files /etc/kafka -type f
+
+#############################################################
+section_header "Kafka log files"
+
+find_and_plog_files /var/log/kafka -type f
+
+#############################################################
+section_header "Storm config files"
+
+find_and_pconf_files /etc/storm -type f
+
+#############################################################
+section_header "Storm log files"
+
+find_and_plog_files /var/log/storm -type f
+
+#############################################################
+section_header "elasticsearch config files"
+
+find_and_pconf_files /etc/elasticsearch -type f
+
+#############################################################
+section_header "elasticsearch log files"
+
+find_and_plog_files /var/log/elasticsearch -type f
+
+#############################################################
+section_header "kibana config files"
+
+find_and_pconf_files /etc/kibana -type f
+
+#############################################################
+section_header "kibana log files"
+
+find_and_plog_files /var/log/kibana -type f
+
+#############################################################
+section_header "zookeeper config files"
+
+find_and_pconf_files /etc/zookeeper -type f
+
+#############################################################
+section_header "zookeeper log files"
+
+find_and_plog_files /var/log/zookeeper -type f
+
+#############################################################
+section_header "ansible config files"
+
+find_and_pconf_files /etc/ansible -type f
+
+#############################################################
+section_header "Corosync config"
+
+if [ -d /etc/corosync ]; then
+    if files=$(find /etc/corosync/ -type f | egrep -v 'authkey$'); then
+        if [ -n "$files" ]; then
+            pconf_files $files
+        fi
+    fi
+fi
+
+#############################################################
+section_header "Cluster log files"
+
+if [ -d /var/log/cluster/ ]; then
+    find_and_plog_files  /var/log/cluster   -type f
+fi
+
+#############################################################
+section_header "Backup and Restore log files"
+
+if [ -e /var/log/crowbar/backup-restore.log ]; then
+    plog_files 0 /var/log/crowbar/backup-restore.log
+fi
+
+#############################################################
+section_header "Barclamp configuration details collected with crowbar batch export"
+
+if [ -e /opt/dell/bin/crowbar_batch ]; then
+    crowbar batch export > /var/log/crowbar/batch-export.log
+    plog_files 0 /var/log/crowbar/batch-export.log
+    rm /var/log/crowbar/batch-export.log
+fi
+
+#############################################################
+section_header "Chef data"
+
+if [ -e /var/lib/crowbar/install/crowbar-installed-ok ]; then
+    chef_export_dir=/var/log/crowbar/chef-export
+    mkdir -p ${chef_export_dir}/{node,role,databag}
+    for node in $(knife node list); do
+        knife node show -F json -l $node > ${chef_export_dir}/node/${node}.json
+    done
+    for role in $(knife role list); do
+        knife role show -F json $role > ${chef_export_dir}/role/${role}.json
+    done
+    for databag in $(knife data bag list); do
+        mkdir -p ${chef_export_dir}/databag/${databag}
+        for item in $(knife data bag show $databag); do
+            knife data bag show -F json $databag $item > ${chef_export_dir}/databag/${databag}/${item}.json
+        done
+    done
+    find_and_plog_files_0 $chef_export_dir -type f
+    rm -rf $chef_export_dir
+fi
+
+###############################################################
+section_header "RabbitMQ broker"
+
+if [ -e /usr/sbin/rabbitmqctl ]; then
+    rabbitmqctl_report=/var/log/rabbitmq/rabbitmq_report
+    timeout 3 /usr/sbin/rabbitmqctl report &> ${rabbitmqctl_report}
+    plog_files 0 ${rabbitmqctl_report}
+    rm ${rabbitmqctl_report}
+fi
+
+###############################################################
+section_header "mkcloud"
+
+# This will not always collect files from customer clouds, but will
+# help with internal development.
+plog_files 0 /etc/motd
+plog_files 0 /root/mkcloud.config
+find_and_plog_files_0 /root -name \*.proposal
+###############################################################
+section_header "ardana"
+
+plog_files 0 /var/lib/ardana/.ansible/ansible.log
+find_and_plog_files_0 \
+    /var/lib/ardana/openstack/my_cloud/ \
+    /var/lib/ardana/scratch/ansible/next/ardana/ansible/ \
+    /var/log/ardana-service/logs                             -type f
+find_and_pconf_files 0 /etc/ardana-service                   -type f
+pconf_files \
+    /var/lib/ardana/.ansible.cfg \
+    /opt/ardana_packager/ardana-*/sles_venv/*packages
+
+###############################################################
+section_header "ops-console"
+
+# Ops Console only on Ardana based deployments
+if [ -d /var/log/ops-console/ ]; then
+    find_and_plog_files  /var/log/ops-console   -type f
+fi
