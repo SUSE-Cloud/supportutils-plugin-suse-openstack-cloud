@@ -350,7 +350,7 @@ section_header "OpenStack config files"
 for svc in keystone rabbitmq glance swift nova cinder neutron heat ceilometer \
     manila barbican magnum monasca monasca-log-agent monasca-log-persister \
     monasca-log-metrics monasca-log-transformer monasca-notification \
-    monasca-persister monasca-thresh trove designate sahara ironic ec2api; do
+    monasca-persister monasca-thresh trove designate sahara ironic ec2api freezer; do
     find_and_pconf_files /etc/$svc /opt/stack/service/$svc -type f -regex \
         '.*\.\(co?nf\(ig\)?\|ini\|json\|filters\|y\(a\)?ml\)'
 
@@ -371,7 +371,7 @@ section_header "OpenStack log files"
 for svc in keystone rabbitmq qpidd glance swift nova cinder neutron heat ceilometer \
     manila barbican magnum monasca monasca-api monasca-log-metrics \
     monasca-log-transformer monasca-persister monasca-agent monasca-log-agent \
-    monasca-log-persister monasca-notification trove designate sahara ironic ec2-api; do
+    monasca-log-persister monasca-notification trove designate sahara ironic ec2-api freezer; do
     find_and_plog_files /var/log/$svc -type f
 done
 
