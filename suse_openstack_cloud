@@ -350,7 +350,7 @@ section_header "OpenStack config files"
 for svc in keystone rabbitmq glance swift nova cinder neutron heat ceilometer \
     manila barbican magnum monasca monasca-log-agent monasca-log-persister \
     monasca-log-metrics monasca-log-transformer monasca-notification \
-    monasca-persister monasca-thresh trove designate sahara ironic ec2api; do
+    monasca-persister monasca-thresh trove designate sahara ironic ec2api freezer; do
     find_and_pconf_files /etc/$svc /opt/stack/service/$svc -type f -regex \
         '.*\.\(co?nf\(ig\)?\|ini\|json\|filters\|y\(a\)?ml\)'
 
@@ -374,7 +374,7 @@ section_header "OpenStack log files"
 for svc in keystone rabbitmq qpidd glance swift nova cinder neutron heat ceilometer \
     manila barbican magnum monasca monasca-api monasca-log-metrics \
     monasca-log-transformer monasca-persister monasca-agent monasca-log-agent \
-    monasca-log-persister monasca-notification trove designate sahara ironic ec2-api; do
+    monasca-log-persister monasca-notification trove designate sahara ironic ec2-api freezer; do
     find_and_plog_files /var/log/$svc -type f
 done
 
@@ -527,9 +527,18 @@ section_header "ardana"
 
 plog_files 0 /var/lib/ardana/.ansible/ansible.log
 find_and_plog_files_0 \
-    /var/lib/ardana/openstack/my_cloud/definition \
+    /var/lib/ardana/openstack/my_cloud \
+    /var/lib/ardana/scratch/ansible/next/ardana/ansible \
     /var/log/ardana-service/logs                             -type f
 find_and_pconf_files 0 /etc/ardana-service                   -type f
 pconf_files \
     /var/lib/ardana/.ansible.cfg \
     /opt/ardana_packager/ardana-*/sles_venv/*packages
+
+###############################################################
+section_header "ops-console"
+
+# Ops Console only on Ardana based deployments
+if [ -d /var/log/ops-console/ ]; then
+    find_and_plog_files  /var/log/ops-console   -type f
+fi
