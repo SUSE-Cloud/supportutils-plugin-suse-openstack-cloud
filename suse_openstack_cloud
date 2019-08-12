@@ -102,11 +102,18 @@ web_ui_admin_default_password "s3kr1t"
 neutron_admin_password=s3kr1t
 rabbit_password=s3kr1t
     ilo-password: s3kr1t
-connection=postgresql://nova:s3kr1t@192.168.124.81/nova
+connection=mysql+pymysql://nova_api:s3kr1t@192.168.124.81/nova
+connection = mysql+pymysql://nova_api:s3kr1t@192.168.124.81/nova
+sql_connection = postgresql://nova_api:s3kr1t@192.168.124.81/nova
    password: p4ssw0rt
    service_password: service_p4ssw0rt
    stack_domain_admin_password: 4dm1n_p4ssw0rt
    auth_encryption_key: 4u7h_ke7
+admin_password = secretpass
+password = secretpass
+password=secret\$pass
+password_type=password
+stack_domain_password=secret
 EOF
 }
 
@@ -123,11 +130,18 @@ web_ui_admin_default_password "$CENSORED"
 neutron_admin_password=$CENSORED
 rabbit_password=$CENSORED
     ilo-password: $CENSORED
-connection=postgresql://nova:$CENSORED@192.168.124.81/nova
+connection=mysql+pymysql://nova_api:$CENSORED@192.168.124.81/nova
+connection = mysql+pymysql://nova_api:$CENSORED@192.168.124.81/nova
+sql_connection = postgresql://nova_api:$CENSORED@192.168.124.81/nova
    password: $CENSORED
    service_password: $CENSORED
    stack_domain_admin_password: $CENSORED
    auth_encryption_key: $CENSORED
+admin_password = $CENSORED
+password = $CENSORED
+password=$CENSORED
+password_type=password
+stack_domain_password=$CENSORED
 EOF
 )
 
@@ -149,13 +163,14 @@ _capture_filter() {
 
         # neutron_admin_password=s3kr1t
         # rabbit_password=s3kr1t
-        -e 's/^\( *[a-z_]\+_password[a-z_]*=\).\+/\1'"$CENSORED"'/'
+        -e 's/^\( *\([a-z_]\+_\)\?password *= *\).\+/\1'"$CENSORED"'/'
 
         # ilo-password: s3kr1t
         -e 's/^\( *ilo-password: \).\+/\1'"$CENSORED"'/'
 
-        # connection=postgresql://nova:s3kr1t@192.168.124.81/nova
-        -e 's!^\( *\([a-z_]\+_\)\?connection[a-z_]*=[a-z]\+://[a-z_]\+:\)[^@]\+@!\1'"$CENSORED"'@!'
+        # connection = mysql+pymysql:/://nova_api:s3kr1t@192.168.124.81/nova
+        -e 's!^\( *\([a-z_]\+_\)\?connection[a-z_]* *= *[a-z+]\+://[a-z_]\+:\)[^@]\+@!\1'"$CENSORED"'@!'
+
         # Filter passwords from crowbar batch export output
         # [   ] password: p4ssw0rt
         # [   ] service_password: service_p4ssw0rt
