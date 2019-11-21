@@ -380,6 +380,22 @@ for svc in keystone rabbitmq glance swift nova cinder neutron heat ceilometer \
     esac
 done
 
+for svc in barbican-api barbican-worker ceilometer-agent-notification ceilometer-common \
+    ceilometer-polling cinder-api cinder-backup cinder-common cinder-scheduler cinder-volume \
+    designate-api designate-central designate-mdns designate-producer designate-worker glance-api \
+    heat-api heat-api-cfn heat-engine horizon ironic-api ironic-conductor keystone magnum-api \
+    magnum-conductor monasca monasca-api monasca-notification monasca-transform  \
+    neutron nova-api nova-conductor nova-novncproxy nova-scheduler octavia \
+    spark swift-account-auditor swift-account-reaper swift-account-replicator swift-account-server \
+    swift-common swift-container-auditor swift-container-reconciler swift-container-replicator \
+    swift-container-server swift-container-sync swift-container-updater swift-object-auditor \
+    swift-object-expirer swift-object-reconstructor swift-object-replicator swift-object-server \
+    swift-object-updater swift-proxy-server; do
+    find_and_pconf_files /opt/stack/service/$svc/etc -type f -regex \
+        '.*\.\(co?nf\(ig\)?\|ini\|json\|filters\|y\(a\)?ml\)'
+done
+
+
 pconf_files /srv/www/openstack-dashboard/openstack_dashboard/local/local_settings.py
 find_and_pconf_files /srv/www/openstack-dashboard/openstack_dashboard/local/local_settings.d -type f -regex '.*\.py'
 
@@ -544,7 +560,9 @@ plog_files 0 /var/lib/ardana/.ansible/ansible.log
 find_and_plog_files_0 \
     /var/lib/ardana/openstack/my_cloud \
     /var/lib/ardana/scratch/ansible/next/ardana/ansible \
-    /var/log/ardana-service/logs                             -type f
+    /var/log/ardana-service/logs               '( -type f -o -type l )'
+find_and_plog_files_0 \
+    /var/lib/ardana/openstack/my_cloud/config                -type l
 find_and_pconf_files 0 /etc/ardana-service                   -type f
 pconf_files \
     /var/lib/ardana/.ansible.cfg \
