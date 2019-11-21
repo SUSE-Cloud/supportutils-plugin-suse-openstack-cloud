@@ -380,12 +380,13 @@ for svc in keystone rabbitmq glance swift nova cinder neutron heat ceilometer \
     esac
 done
 
-for svc in barbican-api barbican-worker ceilometer-agent-notification ceilometer-common \
+for svc in barbican-api barbican-worker ceilometer-agent-notification ceilometer-api ceilometer-common \
     ceilometer-polling cinder-api cinder-backup cinder-common cinder-scheduler cinder-volume \
-    designate-api designate-central designate-mdns designate-producer designate-worker glance-api \
-    heat-api heat-api-cfn heat-engine horizon ironic-api ironic-conductor keystone magnum-api \
-    magnum-conductor monasca monasca-api monasca-notification monasca-transform  \
-    neutron nova-api nova-conductor nova-novncproxy nova-scheduler octavia \
+    designate-api designate-central designate-mdns designate-pool-manager designate-producer \
+    designate-worker designate-zone-manager freezer-api glance-api glance-registry \
+    heat-api heat-api-cfn heat-api-cloudwatch heat-engine horizon ironic-api ironic-conductor \
+    keystone magnum-api  magnum-conductor monasca monasca-api monasca-notification monasca-transform  \
+    neutron nova-api nova-conductor nova-consoleauth nova-novncproxy nova-scheduler octavia \
     spark swift-account-auditor swift-account-reaper swift-account-replicator swift-account-server \
     swift-common swift-container-auditor swift-container-reconciler swift-container-replicator \
     swift-container-server swift-container-sync swift-container-updater swift-object-auditor \
