@@ -289,8 +289,8 @@ if rpm -q mariadb; then
     mariadb_variables_file=/tmp/mariadb_variables
     mariadb_status_file=/tmp/mariadb_status
 
-    mysql -u monitoring -e 'SHOW VARIABLES;' > $mariadb_variables_file
-    mysql -u monitoring -e 'SHOW STATUS;' > $mariadb_status_file
+    mysql -e 'SHOW VARIABLES;' > $mariadb_variables_file
+    mysql -e 'SHOW STATUS;' > $mariadb_status_file
 
     plog_files 0 $mariadb_variables_file
     plog_files 0 $mariadb_status_file
